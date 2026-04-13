@@ -1,0 +1,77 @@
+[workspace]
+resolver = "2"
+members = [
+    "runtime/ntl-core",
+    "runtime/ntl-cli",
+    "runtime/ntl-node",
+    "runtime/ntl-edge",
+    "adapters/web2",
+    "adapters/web3",
+    "adapters/legacy",
+    "examples/kv-store",
+    "examples/echo-node",
+    "benchmarks",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/nyuchitech/ntl"
+homepage = "https://ntl.nyuchi.com"
+authors = ["Nyuchi Africa <engineering@nyuchi.com>"]
+rust-version = "1.85"
+
+[workspace.dependencies]
+# Core
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_cbor = "0.11"
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+bytes = "1"
+ulid = "1"
+
+# Crypto
+blake3 = "1"
+pqcrypto-dilithium = "0.5"
+pqcrypto-kyber = "0.8"
+aes-gcm = "0.10"
+ed25519-dalek = "2"
+x25519-dalek = "2"
+rand = "0.8"
+toml = "0.8"
+
+# Networking
+quinn = "0.11"          # QUIC implementation
+rustls = "0.23"
+rcgen = "0.13"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+colored = "2"
+indicatif = "0.17"
+dialoguer = "0.11"
+
+# Web adapters
+axum = "0.7"
+tonic = "0.12"           # gRPC
+tower = "0.5"
+
+# Testing
+criterion = "0.5"
+proptest = "1"
+tempfile = "3"
+
+# Internal
+ntl-core = { path = "runtime/ntl-core" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"

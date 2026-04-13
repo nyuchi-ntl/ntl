@@ -1,0 +1,89 @@
+---
+title: Node
+description: Node initialization, lifecycle, and management API
+---
+
+# Node API
+
+The `Node` is the primary entry point for the NTL runtime.
+
+## Node::builder()
+
+Creates a new `NodeBuilder` for configuring and initializing a node.
+
+```rust
+let node = Node::builder()
+    .with_config_file("~/.ntl/config.toml")    // Load from file
+    .with_crypto_module("pq-v1")                // Set crypto module
+    .with_bootstrap(vec![                        // Override bootstrap nodes
+        "ntl://bootstrap.nyuchi.com:4433",
+    ])
+    .with_max_synapses(500)                     // Synapse limit
+    .build()
+    .await?;
+```
+
+## node.run_until_shutdown()
+
+Runs the node until a shutdown signal (SIGINT/SIGTERM) is received.
+
+```rust
+node.run_until_shutdown().await?;
+```
+
+## node.register_handler(handler)
+
+Registers a signal handler with the node.
+
+```rust
+node.register_handler(MyHandler).await?;
+```
+
+## node.register_adapter(adapter)
+
+Registers an adapter with the node.
+
+```rust
+node.register_adapter(http_adapter).await?;
+```
+
+## node.synapses()
+
+Returns a list of all active synapses.
+
+```rust
+let synapses = node.synapses().await?;
+```
+
+## node.status()
+
+Returns the node's current health and status.
+
+```rust
+let status = node.status().await?;
+println!("Identity: {}", status.node_id);
+println!("Synapses: {}", status.active_synapses);
+println!("Signals processed: {}", status.signals_processed);
+```
+
+## node.listen(signal_type)
+
+Creates a listener for signals of a specific type.
+
+```rust
+let mut listener = node.listen(SignalType::Event).await?;
+while let Some(signal) = listener.next().await {
+    // Process signal
+}
+```
+
+## node.wait_correlation(signal_id, timeout)
+
+Waits for a response signal correlated to a specific signal ID.
+
+```rust
+let response = node.wait_correlation(
+    signal_id,
+    Duration::from_secs(30)
+).await?;
+```

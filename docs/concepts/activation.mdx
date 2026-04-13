@@ -1,0 +1,138 @@
+---
+title: Activation
+description: How NTL nodes decide when to process and propagate signals
+---
+
+# Activation
+
+**Activation** is the mechanism by which NTL nodes decide whether to process an incoming signal. It replaces traditional rate limiting, load balancing, and routing logic with a biologically-inspired threshold model.
+
+## The Activation Model
+
+In biological neurons, a cell fires only when incoming stimulation exceeds its **activation threshold**. Below threshold, signals accumulate but produce no output. Above threshold, the neuron fires and propagates.
+
+NTL nodes work the same way:
+
+1. Signals arrive at a node via synapses
+2. Each signal contributes its **weight** to the node's **activation potential**
+3. When the activation potential exceeds the node's **threshold**, the node processes the signal and may propagate further
+4. After firing, the node enters a **refractory period** before it can fire again
+
+## Why Not Rate Limiting?
+
+Traditional rate limiting is crude: it counts requests per time window and rejects anything over the limit. This has fundamental problems:
+
+- It treats all requests equally (a critical signal is rejected the same as spam)
+- It doesn't adapt to network conditions
+- It creates hard failure modes (429 errors, retry storms)
+- It doesn't provide natural backpressure
+
+Activation thresholds solve all of these:
+
+| Problem | Rate Limiting | Activation |
+|---|---|---|
+| Signal priority | All equal | Weight-based priority |
+| Adaptation | Fixed windows | Dynamic threshold |
+| Failure mode | Hard reject (429) | Graceful accumulation |
+| Backpressure | None (client retries) | Natural (signals queue) |
+| Spam resistance | IP-based blocking | Weight attenuation |
+
+## Activation Mechanics
+
+### Activation Potential
+
+Each node maintains an activation potential — a running weighted sum of incoming signals:
+
+```rust
+struct ActivationState {
+    potential: f32,              // Current accumulated potential
+    threshold: f32,             // Firing threshold
+    refractory_until: u64,      // Timestamp when node can fire again
+    refractory_period_ns: u64,  // Cooldown duration
+}
+```
+
+When a signal arrives:
+
+```rust
+fn receive_signal(&mut self, signal: &Signal, synapse: &Synapse) {
+    // Weight is attenuated by synapse strength
+    let contribution = signal.weight * synapse.weight;
+    self.potential += contribution;
+
+    if self.potential >= self.threshold && !self.in_refractory() {
+        self.fire(signal);
+        self.potential = 0.0;  // Reset after firing
+        self.enter_refractory();
+    }
+}
+```
+
+### Dynamic Threshold
+
+The activation threshold is not static. It adjusts based on:
+
+- **Load** — Under high load, the threshold increases (node becomes more selective)
+- **Priority** — Certain signal types can lower the threshold temporarily
+- **Health** — Degraded nodes raise their threshold to shed load
+
+```rust
+fn adjust_threshold(&mut self) {
+    let load_factor = self.current_load / self.capacity;
+    self.threshold = self.base_threshold * (1.0 + load_factor);
+}
+```
+
+### Refractory Period
+
+After firing, a node enters a refractory period during which it cannot fire again. This prevents signal storms and ensures orderly processing. During the refractory period, incoming signals still accumulate potential — they're not lost, just deferred.
+
+## Activation Functions
+
+NTL supports different activation functions that control the relationship between potential and firing:
+
+### Step (Default)
+
+Fires when potential exceeds threshold. Simple, deterministic.
+
+```
+Output: 0 if potential < threshold, 1 if potential >= threshold
+```
+
+### Sigmoid
+
+Produces a probability of firing that increases smoothly with potential. Useful for stochastic routing.
+
+```
+Output: 1 / (1 + e^(-(potential - threshold)))
+```
+
+### Leaky
+
+Always allows a small fraction of signals through, even below threshold. Useful for ensuring liveness.
+
+```
+Output: max(0.01 * potential, potential >= threshold ? 1 : 0)
+```
+
+### Custom
+
+Applications can register custom activation functions:
+
+```rust
+node.set_activation_function(|potential, threshold| {
+    // Application-specific logic
+    potential >= threshold * 0.8
+});
+```
+
+## Configuration
+
+```toml
+[activation]
+base_threshold = 0.5
+activation_function = "step"   # step, sigmoid, leaky, custom
+refractory_period_ms = 10
+dynamic_threshold = true
+max_potential = 10.0           # Potential cap to prevent overflow
+```

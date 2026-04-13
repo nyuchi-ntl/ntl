@@ -1,0 +1,156 @@
+---
+title: Signals
+description: The fundamental data unit in NTL
+---
+
+# Signals
+
+A **signal** is the fundamental data unit in NTL. It replaces the concept of a "request," "message," or "event" from traditional protocols.
+
+## What is a Signal?
+
+In biological neural networks, a signal is an electrochemical impulse that propagates across neurons. It carries information, has intensity (amplitude), and triggers downstream activity when it exceeds a threshold.
+
+NTL signals work the same way:
+
+- They carry a **payload** (the data)
+- They have a **weight** (priority/intensity)
+- They have a **type** (what kind of signal this is)
+- They are **signed** (cryptographically verified origin)
+- They have **propagation rules** (how far and where they should travel)
+
+## Signal Structure
+
+```rust
+struct Signal {
+    // Identity
+    id: SignalId,               // Unique identifier (ULID)
+    signal_type: SignalType,    // Typed signal classification
+    version: u8,                // Signal format version
+
+    // Origin
+    origin: NodeId,             // Emitting node
+    signature: Vec<u8>,         // Cryptographic signature
+    timestamp: u64,             // Emission timestamp (nanoseconds)
+
+    // Payload
+    payload: Payload,           // The actual data
+    encoding: Encoding,         // Payload encoding (binary, CBOR, etc.)
+
+    // Propagation
+    weight: f32,                // Signal weight (0.0 - 1.0)
+    ttl: u16,                   // Time-to-live (max hops)
+    scope: PropagationScope,    // Local, regional, global
+    trace: Vec<NodeId>,         // Path taken so far
+
+    // Metadata
+    correlation_id: Option<SignalId>,  // Links related signals
+    tags: Vec<String>,                  // Searchable tags
+}
+```
+
+## Signal Types
+
+Signals are strongly typed. The type determines how the propagation engine handles routing and how receiving nodes process the signal.
+
+| Type | Description | Use Case |
+|---|---|---|
+| `Data` | Carries a data payload | Transferring state, content, records |
+| `Query` | Requests data from the network | Discovering information, search |
+| `Event` | Notifies of a state change | Real-time updates, triggers |
+| `Command` | Requests an action | Remote execution, orchestration |
+| `Heartbeat` | Maintains synapse liveness | Health checks, presence |
+| `Discovery` | Announces capability | Service registration, topology |
+| `Ack` | Confirms signal receipt | Delivery guarantees |
+
+### Custom Types
+
+Applications can register custom signal types with the node's type registry:
+
+```rust
+node.register_signal_type(SignalType::Custom {
+    name: "transaction",
+    schema: TransactionSchema,
+    propagation: PropagationPolicy::Targeted,
+});
+```
+
+## Signal Weight
+
+Weight is a floating-point value between 0.0 and 1.0 that represents signal priority and intensity. Weight affects:
+
+- **Activation** — Higher weight signals are more likely to trigger activation thresholds
+- **Propagation priority** — When a node has multiple signals to propagate, higher weight signals go first
+- **Synapse strengthening** — High-weight signals strengthen the synapses they traverse more than low-weight signals
+
+Weight is set by the emitting node and may be attenuated (reduced) as the signal propagates, similar to how electrical signals attenuate over distance in physical networks.
+
+## Signal Lifecycle
+
+```
+  Emit → Sign → Encode → Propagate → Activate → Process → (Ack)
+   │                        │            │
+   │                        ▼            ▼
+   │                    Attenuate    Deposit to
+   │                    Weight      SiafuDB
+   │                        │
+   │                        ▼
+   │                    Propagate
+   │                    Further
+   │                        │
+   │                        ▼
+   └──────────────────── Expire (TTL)
+```
+
+1. **Emit** — A node creates a signal with payload, type, and weight
+2. **Sign** — The crypto module signs the signal with the node's identity
+3. **Encode** — The payload is encoded (CBOR by default for compactness)
+4. **Propagate** — The signal enters the propagation engine
+5. **Activate** — At each node, the activation gate determines if the signal triggers processing
+6. **Process** — The receiving node handles the signal
+7. **Ack** — Optionally, the receiver emits an acknowledgment signal
+
+## Encoding
+
+NTL uses [CBOR](https://cbor.io/) (Concise Binary Object Representation) as the default encoding for signal payloads. CBOR is:
+
+- Binary (compact, fast to parse)
+- Self-describing (no external schema needed)
+- Based on the JSON data model (familiar to developers)
+- An IETF standard (RFC 8949)
+
+Other encodings can be plugged in via the encoding interface:
+
+```rust
+enum Encoding {
+    Cbor,           // Default — compact binary
+    Protobuf,       // When schema is shared
+    Raw,            // Unstructured bytes
+    Custom(String), // Application-defined
+}
+```
+
+## Correlation
+
+Signals can be correlated using the `correlation_id` field. This allows request-response patterns when needed (an adapter receiving an HTTP request emits a Query signal and waits for a correlated Data signal), while keeping the core transport model non-bilateral.
+
+```rust
+// Emit a query
+let query = Signal::query("user_profile")
+    .with_payload(user_id)
+    .emit(&node);
+
+// Somewhere in the network, a node responds
+let response = Signal::data("user_profile")
+    .with_correlation(query.id)
+    .with_payload(profile_data)
+    .emit(&node);
+```
+
+## Design Decisions
+
+**Why not just events?** Event systems (Kafka, NATS, etc.) are publish-subscribe — they require pre-defined topics and explicit subscriptions. NTL signals propagate based on relevance and topology, not topic matching. This enables emergent routing that pub/sub cannot achieve.
+
+**Why CBOR over Protobuf?** Protobuf requires shared schema compilation. In a decentralized network where nodes may not share schema registries, self-describing formats are essential. CBOR provides binary compactness with self-description.
+
+**Why ULIDs over UUIDs?** ULIDs are lexicographically sortable by time, which is critical for signal ordering in the propagation engine. They also encode their timestamp, reducing metadata overhead.

@@ -1,0 +1,1 @@
+//! NTL legacy adapter.

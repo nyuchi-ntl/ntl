@@ -1,0 +1,97 @@
+---
+title: Adapter Contract
+description: Specification for protocol translation adapters
+---
+
+# Adapter Contract Specification
+
+**Version:** 0.1.0-draft
+
+## Overview
+
+Adapters translate between NTL signals and external protocols. This document specifies the interface that all adapters MUST implement.
+
+## Interface
+
+```
+Adapter {
+    // Translation
+    ingest(external: ExternalPayload) -> Result<Signal>
+    emit(signal: Signal) -> Result<ExternalPayload>
+
+    // Metadata
+    protocol() -> Protocol
+    capabilities() -> AdapterCapabilities
+
+    // Lifecycle
+    start() -> Result
+    stop() -> Result
+    health() -> AdapterHealth
+}
+```
+
+## ExternalPayload
+
+The generic container for external protocol data:
+
+```
+ExternalPayload {
+    data: bytes,              // Raw payload
+    content_type: string,     // MIME type
+    metadata: Map<string, string>,  // Protocol-specific metadata
+}
+```
+
+## AdapterCapabilities
+
+Adapters declare their capabilities:
+
+```
+AdapterCapabilities {
+    can_ingest: bool,         // Can receive external → signal
+    can_emit: bool,           // Can send signal → external
+    bidirectional: bool,      // Supports persistent bidirectional channel
+    correlation: bool,        // Supports request-response correlation
+    streaming: bool,          // Supports streaming signals
+}
+```
+
+## Health States
+
+| State | Description | Behavior |
+|---|---|---|
+| `Healthy` | Operating normally | Full throughput |
+| `Degraded` | Partial functionality | Reduced throughput, increased timeouts |
+| `Unhealthy` | Not functioning | Queues signals, emits health warnings |
+
+## Registration
+
+Adapters MUST register with their node:
+
+```
+node.register_adapter(adapter) -> Result
+```
+
+Registered adapters:
+- Appear in node health checks
+- Are included in discovery signals
+- Can be queried via the node management interface
+
+## Correlation Requirements
+
+Adapters that support correlation (request-response patterns) MUST:
+1. Generate a signal with a unique ID for each incoming request
+2. Hold the external connection open
+3. Match response signals by `correlation_id`
+4. Enforce a configurable timeout (default: 30 seconds)
+5. Return an appropriate error to the external client on timeout
+
+## Standard Adapters
+
+The NTL reference implementation MUST include:
+
+| Adapter | Protocol | Module ID |
+|---|---|---|
+| Web2 | HTTP/1.1, HTTP/2, WebSocket, gRPC | `web2-v1` |
+| Web3 | EVM chains, DID verification | `web3-v1` |
+| Legacy | REST, SOAP (configuration-driven) | `legacy-v1` |

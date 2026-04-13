@@ -1,0 +1,73 @@
+---
+title: Identity
+description: How NTL nodes establish and verify identity
+---
+
+# Identity
+
+Every NTL node has an identity. Identity determines who can emit signals, who can form synapses, and how trust is established in the network.
+
+## Identity Model
+
+NTL supports a **layered identity model**:
+
+```
+┌─────────────────────────────┐
+│   Application Identity      │  ← App-level (username, org)
+├─────────────────────────────┤
+│   Decentralized Identity    │  ← Optional DID anchor
+├─────────────────────────────┤
+│   NTL Node Identity         │  ← Core (keypair-based)
+└─────────────────────────────┘
+```
+
+### NTL Node Identity (Required)
+
+Every node generates a keypair on initialization. The public key serves as the node's identity:
+
+```rust
+struct NodeIdentity {
+    id: NodeId,                    // Derived from public key
+    public_key: PublicKey,         // From the active crypto module
+    created_at: u64,
+    capabilities: Vec<Capability>,
+}
+```
+
+This is self-sovereign — no registration, no authority, no permission needed. A node generates a key and exists.
+
+### Decentralized Identity (Optional)
+
+Nodes can anchor their NTL identity to a DID for cross-system verification:
+
+```rust
+struct DidAnchor {
+    did: String,                   // e.g., "did:web:nyuchi.com:nodes:abc123"
+    verification_method: String,
+    proof: Vec<u8>,
+}
+```
+
+### Application Identity (Optional)
+
+Applications built on NTL can layer their own identity systems on top — usernames, organizational roles, permissions. These exist at the application layer and don't affect NTL transport.
+
+## Trust
+
+NTL doesn't have a global trust model. Trust is **local and earned**:
+
+1. New synapse → minimal trust (low weight)
+2. Successful signal exchange → trust increases (weight grows)
+3. Failed or malicious signals → trust decreases (weight drops)
+4. Sustained bad behavior → synapse prunes (isolation)
+
+This is a reputation system built into the topology itself — no external oracle, no staking, no governance vote. Just observed behavior over time.
+
+## Anonymous Participation
+
+NTL supports anonymous participation. A node can:
+- Generate a fresh keypair for each session
+- Not anchor to any DID
+- Participate with reduced trust (lower initial synapse weight)
+
+Anonymous nodes can still emit and receive signals, but they start with less network influence and must earn weight through participation.

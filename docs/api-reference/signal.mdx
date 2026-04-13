@@ -1,0 +1,87 @@
+---
+title: Signal
+description: Signal creation, types, and encoding API
+---
+
+# Signal API
+
+Signals are the fundamental data unit in NTL.
+
+## Signal Constructors
+
+```rust
+// Data signal
+Signal::data("topic")
+
+// Query signal
+Signal::query("topic")
+
+// Event signal
+Signal::event("topic")
+
+// Command signal
+Signal::command("topic")
+
+// Discovery signal
+Signal::discovery()
+
+// Heartbeat signal
+Signal::heartbeat()
+```
+
+## Builder Methods
+
+```rust
+let signal = Signal::data("user-profile")
+    .with_payload(json!({"id": "abc123"}))  // Set payload
+    .with_weight(0.8)                        // Set weight (0.0-1.0)
+    .with_ttl(5)                             // Set TTL
+    .with_tags(vec!["user", "profile"])      // Set tags
+    .with_correlation(other_signal.id)       // Set correlation
+    .with_scope(PropagationScope::Targeted { // Set scope
+        destination: node_id
+    })
+    .emit(&node)                             // Emit to network
+    .await?;
+```
+
+## Signal Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `SignalId` | ULID identifier |
+| `signal_type` | `SignalType` | Type enum |
+| `origin` | `NodeId` | Emitting node |
+| `payload` | `serde_json::Value` | Signal data |
+| `weight` | `f32` | Priority (0.0-1.0) |
+| `ttl` | `u16` | Remaining hops |
+| `timestamp` | `u64` | Emission time (ns) |
+| `tags` | `Vec<String>` | Searchable tags |
+| `correlation_id` | `Option<SignalId>` | Response correlation |
+| `trace` | `Vec<NodeId>` | Propagation path |
+
+## SignalType Enum
+
+```rust
+enum SignalType {
+    Data,
+    Query,
+    Event,
+    Command,
+    Heartbeat,
+    Discovery,
+    Ack,
+    Custom(String),
+}
+```
+
+## PropagationScope Enum
+
+```rust
+enum PropagationScope {
+    Flood { max_hops: u16 },
+    Weighted { min_synapse_weight: f32 },
+    Targeted { destination: NodeId },
+    Gradient { signal_type: String },
+}
+```

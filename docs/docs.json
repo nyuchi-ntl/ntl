@@ -1,0 +1,133 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Nyuchi Transfer Layer",
+  "theme": "mint",
+  "logo": {
+    "dark": "/logo/ntl-dark.svg",
+    "light": "/logo/ntl-light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#E85D26",
+    "light": "#F2A93B",
+    "dark": "#E85D26"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/nyuchitech/ntl"
+      },
+      {
+        "type": "discord",
+        "href": "https://discord.gg/nyuchi"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "/guides/quickstart"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Introduction",
+            "pages": [
+              "introduction",
+              "why-ntl",
+              "architecture"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/signals",
+              "concepts/synapses",
+              "concepts/activation",
+              "concepts/propagation",
+              "concepts/topology"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/quickstart",
+              "guides/first-signal",
+              "guides/building-adapters",
+              "guides/siafu-integration"
+            ]
+          },
+          {
+            "group": "Adapters",
+            "pages": [
+              "adapters/overview",
+              "adapters/web2",
+              "adapters/web3",
+              "adapters/legacy-api"
+            ]
+          },
+          {
+            "group": "Security",
+            "pages": [
+              "security/overview",
+              "security/pluggable-crypto",
+              "security/post-quantum",
+              "security/identity"
+            ]
+          },
+          {
+            "group": "Governance",
+            "pages": [
+              "governance/contributing",
+              "governance/roadmap",
+              "governance/rfc-process"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Specification",
+        "groups": [
+          {
+            "group": "Specification",
+            "pages": [
+              "spec/overview",
+              "spec/signal-format",
+              "spec/synapse-lifecycle",
+              "spec/propagation-rules",
+              "spec/activation-model",
+              "spec/crypto-interface",
+              "spec/adapter-contract"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "API Reference",
+            "pages": [
+              "api-reference/overview",
+              "api-reference/node",
+              "api-reference/signal",
+              "api-reference/synapse",
+              "api-reference/adapter"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/nyuchiafrica",
+      "github": "https://github.com/nyuchitech",
+      "linkedin": "https://linkedin.com/company/nyuchi-africa"
+    }
+  }
+}

@@ -1,0 +1,78 @@
+---
+title: Crypto Interface
+description: Specification for the pluggable cryptographic module
+---
+
+# Crypto Interface Specification
+
+**Version:** 0.1.0-draft
+
+## Overview
+
+NTL defines a cryptographic module interface that all signing, verification, encryption, and key exchange operations MUST go through. No cryptographic algorithm is hardcoded into the protocol.
+
+## Interface
+
+Implementations MUST provide a module that satisfies this interface:
+
+```
+CryptoModule {
+    // Identity
+    module_id() -> string
+
+    // Key management
+    generate_keypair() -> (PublicKey, PrivateKey)
+
+    // Signing
+    sign(data: bytes, key: PrivateKey) -> Signature
+    verify(data: bytes, signature: Signature, key: PublicKey) -> bool
+
+    // Encryption
+    encrypt(data: bytes, recipient_key: PublicKey) -> bytes
+    decrypt(data: bytes, key: PrivateKey) -> bytes
+
+    // Key exchange
+    key_exchange(local: PrivateKey, remote: PublicKey) -> SharedSecret
+
+    // Hashing
+    hash(data: bytes) -> Hash
+}
+```
+
+## Module Negotiation
+
+During synapse handshake, nodes exchange their supported crypto module IDs. The synapse MUST use a mutually supported module. If no common module exists, the synapse formation MUST fail.
+
+Priority order for module selection:
+1. Both nodes' preferred module (if same)
+2. Highest-versioned mutually supported module
+3. Failure (no common module)
+
+## Required Modules
+
+Implementations MUST include at minimum:
+
+| Module ID | Algorithms | Status |
+|---|---|---|
+| `pq-v1` | Dilithium + Kyber + AES-256-GCM + BLAKE3 | Default |
+| `classical-v1` | Ed25519 + X25519 + AES-256-GCM + BLAKE3 | Legacy compatibility |
+
+Implementations SHOULD include:
+
+| Module ID | Algorithms | Status |
+|---|---|---|
+| `hybrid-v1` | Both PQ and classical (dual signatures) | Transition period |
+
+## Key Serialization
+
+Public keys MUST be serializable to bytes for inclusion in signal origin fields and synapse handshakes. The serialization format is module-specific but MUST be deterministic.
+
+## Module Registration
+
+Implementations MUST support runtime registration of custom crypto modules:
+
+```
+register_module(module: CryptoModule) -> Result
+set_default_module(module_id: string) -> Result
+list_modules() -> [ModuleInfo]
+```

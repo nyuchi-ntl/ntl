@@ -1,0 +1,79 @@
+---
+title: Activation Model
+description: Specification for threshold-based signal processing
+---
+
+# Activation Model Specification
+
+**Version:** 0.1.0-draft
+
+## Overview
+
+The activation model defines how nodes decide whether to process incoming signals. It replaces traditional rate limiting with a biologically-inspired threshold system.
+
+## Activation State
+
+Each node MUST maintain an activation state:
+
+```
+ActivationState {
+    potential: float32,          // Accumulated signal weight
+    threshold: float32,         // Firing threshold
+    refractory_until: uint64,   // Nanosecond timestamp
+    refractory_period: uint64,  // Refractory duration in nanoseconds
+}
+```
+
+## Activation Sequence
+
+1. Signal arrives at node via synapse
+2. Signal contribution is calculated: `contribution = signal.weight * synapse.weight`
+3. Contribution is added to node's potential: `potential += contribution`
+4. If `potential >= threshold` AND node is not in refractory period:
+   a. Node fires (processes the signal)
+   b. Potential resets to 0.0
+   c. Node enters refractory period
+5. If potential < threshold OR node is in refractory:
+   a. Signal is queued for accumulation
+   b. No processing occurs
+
+## Dynamic Threshold
+
+The threshold SHOULD adjust dynamically based on node load:
+
+```
+effective_threshold = base_threshold * (1.0 + load_factor)
+```
+
+Where `load_factor = current_queue_depth / max_queue_depth`.
+
+This ensures that overloaded nodes become more selective, providing natural backpressure.
+
+## Refractory Period
+
+After firing, a node MUST enter a refractory period during which it cannot fire again. The RECOMMENDED default is 10 milliseconds. During the refractory period:
+
+- Incoming signals still accumulate potential
+- No processing occurs
+- No signals are dropped (they queue)
+
+## Activation Functions
+
+Implementations MUST support the `step` activation function. Implementations SHOULD support `sigmoid` and `leaky` functions.
+
+| Function | Behavior |
+|---|---|
+| Step | Binary: fires when potential >= threshold |
+| Sigmoid | Probabilistic: firing probability increases smoothly |
+| Leaky | Always passes a small fraction (leak rate = 0.01) |
+
+## Configuration
+
+```
+[activation]
+base_threshold = 0.5          # REQUIRED
+activation_function = "step"   # REQUIRED
+refractory_period_ms = 10     # REQUIRED
+max_potential = 10.0           # RECOMMENDED
+dynamic_threshold = true       # RECOMMENDED
+```

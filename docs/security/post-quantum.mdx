@@ -1,0 +1,50 @@
+---
+title: Post-Quantum Readiness
+description: How NTL prepares for the quantum computing era
+---
+
+# Post-Quantum Readiness
+
+NTL is designed from the ground up to survive the quantum computing transition.
+
+## The Quantum Threat
+
+Quantum computers running Shor's algorithm will break:
+- **RSA** — Key exchange, signatures
+- **ECDSA/EdDSA** — Signatures (Bitcoin, Ethereum, TLS)
+- **ECDH** — Key agreement
+- **DSA** — Digital signatures
+
+This doesn't mean quantum computers will break *everything* — symmetric encryption (AES) and hash functions (SHA-3, BLAKE3) remain quantum-resistant with sufficient key sizes.
+
+## NTL's Quantum Strategy
+
+### 1. No Hardcoded Vulnerable Crypto
+
+The pluggable crypto module means NTL never depends on RSA, ECDSA, or any scheme vulnerable to quantum attack at the protocol level.
+
+### 2. PQ Defaults
+
+The default crypto module uses NIST Post-Quantum standards:
+- **CRYSTALS-Dilithium** (ML-DSA) for signatures
+- **CRYSTALS-Kyber** (ML-KEM) for key encapsulation
+- **BLAKE3** for hashing
+- **AES-256-GCM** for symmetric encryption
+
+### 3. Crypto Agility
+
+When PQ standards evolve (and they will — cryptography is a moving target), NTL nodes update their crypto module without protocol changes. The synapse handshake negotiates compatible modules between peers.
+
+### 4. No Chain Dependency
+
+NTL's core transport doesn't depend on any blockchain's cryptographic scheme. The Web3 adapter handles chain-specific crypto at the edge. If a chain's crypto is broken, you update the adapter — the network continues.
+
+## Timeline Awareness
+
+The current consensus suggests cryptographically relevant quantum computers may arrive between 2030-2040. NTL's approach:
+
+- **Today**: Ship with PQ defaults + hybrid mode
+- **Transition**: Nodes gradually drop classical crypto as PQ matures
+- **Post-quantum era**: Swap to whatever succeeds current PQ standards
+
+The key insight: by treating crypto as pluggable, NTL doesn't need to predict *which* PQ scheme will win long-term. It just needs to be able to swap.

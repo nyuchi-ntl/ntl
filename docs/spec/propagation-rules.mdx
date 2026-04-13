@@ -1,0 +1,95 @@
+---
+title: Propagation Rules
+description: Specification for signal routing through the NTL network
+---
+
+# Propagation Rules Specification
+
+**Version:** 0.1.0-draft
+
+## Overview
+
+This document specifies how signals route through the NTL network topology.
+
+## Core Rules
+
+### Rule 1: TTL Enforcement
+
+A node MUST NOT propagate a signal with TTL = 0. Before propagating, the node MUST decrement the TTL by 1.
+
+### Rule 2: Loop Prevention
+
+A node MUST NOT propagate a signal if its own Node ID appears in the signal's trace. This prevents infinite loops in cyclic topologies.
+
+### Rule 3: Weight Floor
+
+A node MUST NOT propagate a signal with weight below `min_propagation_weight` (default: 0.01). Signals that attenuate below this floor are effectively absorbed.
+
+### Rule 4: Deduplication
+
+A node MUST maintain a deduplication cache of recently seen signal IDs. If a signal ID is already in the cache, the signal MUST be silently dropped. The cache MUST retain entries for at least `max_ttl * avg_propagation_time` duration.
+
+### Rule 5: Signature Verification
+
+A node MUST verify the signal's cryptographic signature before processing or propagating. Invalid signatures MUST result in the signal being dropped and the originating synapse's weight being reduced.
+
+## Propagation Scopes
+
+### Flood (scope = 0)
+
+The signal MUST be propagated to ALL active synapses (excluding the synapse it arrived on). Used for discovery and emergency signals.
+
+**Constraints:**
+- Flood signals SHOULD have low TTL (≤ 3) to prevent network saturation
+- Nodes MAY rate-limit flood propagation
+
+### Weighted (scope = 1) — Default
+
+The signal is propagated to synapses selected by the path scoring function, ordered by score descending. The number of synapses selected is bounded by `max_propagation_fanout` (default: 5).
+
+### Targeted (scope = 2)
+
+The signal is directed toward a specific destination node. The propagation engine selects the synapse most likely to reach the destination, based on topology knowledge and signal trace history.
+
+If the destination is a direct synapse, the signal MUST be sent directly. If not, the signal is forwarded to the synapse with the highest affinity for the destination's region of the topology.
+
+### Gradient (scope = 3)
+
+The signal follows the gradient of type affinity — propagating toward nodes that have historically processed similar signal types. This creates emergent specialization pathways.
+
+## Path Scoring Function
+
+For Weighted and Gradient propagation, synapses are scored:
+
+```
+score = (synapse.weight * W_weight)
+      + (latency_score * W_latency)
+      + (type_affinity * W_affinity)
+      + (recency_score * W_recency)
+```
+
+Where:
+- `latency_score = 1.0 / (1.0 + normalized_latency)`
+- `type_affinity = historical_success_rate_for_signal_type`
+- `recency_score = 1.0 / (1.0 + hours_since_last_active)`
+
+Default weights: `W_weight = 0.4, W_latency = 0.2, W_affinity = 0.3, W_recency = 0.1`
+
+## Attenuation
+
+When propagating a signal, the node MUST attenuate the signal's weight:
+
+```
+signal.weight *= synapse.attenuation_factor
+```
+
+The default attenuation factor is 0.9. Synapses MAY configure different attenuation factors.
+
+## Trace Management
+
+When a node propagates a signal:
+1. The node MUST append its Node ID to the signal's trace
+2. The trace MUST NOT exceed 64 entries
+3. Nodes MAY truncate the oldest entries if the trace exceeds 64
+
+For privacy-sensitive deployments, trace recording MAY be disabled. In this case, loop prevention relies solely on the deduplication cache.

@@ -1,0 +1,83 @@
+---
+title: Contributing
+description: How to contribute to the Nyuchi Transfer Layer
+---
+
+# Contributing to NTL
+
+NTL is fully open source and welcomes contributions from anyone, anywhere. This document outlines how to participate.
+
+## Ways to Contribute
+
+### Specification
+
+The NTL specification is a living document. Contributions include:
+- Clarifying existing language
+- Proposing new features via the RFC process
+- Identifying ambiguities or inconsistencies
+- Reviewing open RFCs
+
+### Reference Implementation
+
+The Rust reference implementation needs:
+- Core protocol implementation
+- Adapter development
+- Testing and benchmarking
+- Documentation
+- Platform-specific optimization
+
+### Ecosystem
+
+Build tools, libraries, and integrations:
+- Client libraries in other languages (Go, Python, TypeScript, C)
+- Monitoring and observability tools
+- Deployment tooling (Docker, Kubernetes, bare metal)
+- SiafuDB integration modules
+
+## Getting Started
+
+```bash
+# Fork and clone
+git clone https://github.com/YOUR_USERNAME/ntl.git
+cd ntl
+
+# Build
+cargo build
+
+# Run tests
+cargo test
+
+# Run benchmarks
+cargo bench
+```
+
+## Pull Request Process
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/signal-compression`)
+3. Write tests for your changes
+4. Ensure all tests pass (`cargo test`)
+5. Ensure code passes linting (`cargo clippy`)
+6. Submit a pull request with a clear description
+
+## Code Style
+
+- Follow Rust standard formatting (`cargo fmt`)
+- Use `clippy` for linting
+- Write doc comments for all public interfaces
+- Include unit tests for new functionality
+- Include integration tests for protocol-level changes
+
+## Community
+
+- **GitHub Discussions** — Questions, ideas, and general discussion
+- **GitHub Issues** — Bug reports and feature requests
+- **Discord** — Real-time chat and community
+
+## Code of Conduct
+
+NTL is built on the Ubuntu philosophy — "I am because we are." We are committed to providing a welcoming and inclusive environment for everyone. All participants are expected to treat each other with respect, kindness, and good faith.
+
+## License
+
+By contributing to NTL, you agree that your contributions will be licensed under the Apache 2.0 License.

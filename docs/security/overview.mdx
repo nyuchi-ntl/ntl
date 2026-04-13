@@ -1,0 +1,65 @@
+---
+title: Security Overview
+description: NTL's approach to cryptography, identity, and threat resistance
+---
+
+# Security
+
+NTL's security model is built on three principles:
+
+1. **Crypto agnosticism** — No cryptographic scheme is hardcoded into the protocol
+2. **Post-quantum readiness** — Default implementations use quantum-resistant algorithms
+3. **Defense in depth** — Security exists at every layer, not just the transport
+
+## Threat Model
+
+NTL is designed to resist:
+
+| Threat | Mitigation |
+|---|---|
+| Signal interception | End-to-end encryption via pluggable crypto |
+| Signal spoofing | Cryptographic signatures on all signals |
+| Signal replay | ULID timestamps + deduplication cache |
+| Node impersonation | Identity verification (local keys or DID) |
+| Topology mapping | Local-knowledge design, truncated traces |
+| Quantum cryptanalysis | Pluggable crypto with PQ defaults |
+| Spam/DoS | Activation thresholds + weight attenuation |
+| Sybil attacks | Synapse weight requires sustained valuable participation |
+
+## Layers of Security
+
+### Signal Layer
+
+Every signal is:
+- **Signed** by the emitting node's identity key
+- **Optionally encrypted** end-to-end for targeted signals
+- **Timestamped** with ULID for replay prevention
+- **Traceable** for audit (with optional trace truncation for privacy)
+
+### Synapse Layer
+
+Every synapse:
+- Performs a **cryptographic handshake** on formation
+- Negotiates **transport encryption** (QUIC provides this by default)
+- Is **authenticated** — both nodes verify each other's identity
+
+### Network Layer
+
+The propagation engine provides:
+- **Weight-based spam resistance** — New nodes start with low-weight synapses; you can't flood the network without earning weight through valuable participation
+- **Activation thresholds** — Natural rate limiting that adapts to conditions
+- **Deduplication** — Prevents amplification attacks
+
+## Further Reading
+
+<CardGroup cols={3}>
+  <Card title="Pluggable Crypto" icon="key" href="/security/pluggable-crypto">
+    How NTL's crypto module works
+  </Card>
+  <Card title="Post-Quantum" icon="atom" href="/security/post-quantum">
+    Quantum readiness approach
+  </Card>
+  <Card title="Identity" icon="fingerprint" href="/security/identity">
+    Node identity and verification
+  </Card>
+</CardGroup>

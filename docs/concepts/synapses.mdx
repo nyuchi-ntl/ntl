@@ -1,0 +1,171 @@
+---
+title: Synapses
+description: Persistent, weighted connections between NTL nodes
+---
+
+# Synapses
+
+A **synapse** is a persistent, stateful, weighted connection between two NTL nodes. Synapses are the edges in the neural graph — they determine how signals flow through the network.
+
+## How Synapses Differ from Connections
+
+| Property | HTTP Connection | WebSocket | NTL Synapse |
+|---|---|---|---|
+| State | Stateless | Session state | Weighted, learning |
+| Lifetime | Per-request | Session duration | Persistent, evolving |
+| Direction | Client → Server | Bidirectional | Bidirectional |
+| Adaptation | None | None | Strengthens/weakens with use |
+| Memory | None | In-memory only | Persisted to SiafuDB |
+
+The key difference: **synapses learn.** A synapse that frequently carries successful signals becomes stronger, meaning it gets priority for future signal propagation. A synapse that goes unused weakens and eventually prunes. This mirrors Hebbian learning in neuroscience — connections that fire together wire together.
+
+## Synapse Structure
+
+```rust
+struct Synapse {
+    // Identity
+    id: SynapseId,
+    local_node: NodeId,
+    remote_node: NodeId,
+
+    // State
+    weight: f32,                    // Current strength (0.0 - 1.0)
+    state: SynapseState,           // Active, Weakening, Dormant, Pruned
+    established_at: u64,           // Creation timestamp
+    last_active: u64,              // Last signal timestamp
+
+    // Statistics
+    signals_transmitted: u64,      // Total signals sent
+    signals_received: u64,         // Total signals received
+    avg_latency_ns: u64,           // Average round-trip nanoseconds
+    error_rate: f32,               // Failed signal ratio
+
+    // Configuration
+    transport: TransportBinding,   // Underlying transport (QUIC, TCP, etc.)
+    max_weight: f32,               // Weight ceiling
+    decay_rate: f32,               // Weight decay per interval
+}
+```
+
+## Synapse Lifecycle
+
+```
+  Discover → Handshake → Active → Strengthen/Weaken → Dormant → Prune
+                            │                             │
+                            └─────── Reactivate ──────────┘
+```
+
+### 1. Discovery
+
+Nodes discover potential synapse partners through:
+
+- **Bootstrap nodes** — Well-known entry points that introduce new nodes to the network
+- **Signal traces** — Signals carry their path; receiving nodes can form synapses with upstream nodes
+- **Discovery signals** — Nodes broadcast capability announcements
+
+### 2. Handshake
+
+When two nodes decide to form a synapse, they perform a handshake:
+
+1. Exchange node identities and capabilities
+2. Negotiate transport binding (QUIC preferred, TCP fallback)
+3. Exchange cryptographic material via the pluggable crypto module
+4. Establish initial weight (typically 0.1)
+
+### 3. Active State
+
+An active synapse transmits signals bidirectionally. With each successful signal transmission:
+
+- Weight increases by a configurable delta
+- Latency statistics update
+- The synapse is marked as recently active
+
+### 4. Strengthening
+
+Weight increases when:
+- Signals are successfully transmitted and acknowledged
+- High-weight signals traverse the synapse
+- The remote node provides valuable responses (as determined by the application layer)
+
+```rust
+// Weight adjustment formula
+new_weight = min(
+    current_weight + (signal.weight * strengthen_factor),
+    max_weight
+)
+```
+
+### 5. Weakening
+
+Weight decreases when:
+- Time passes without signal activity (decay)
+- Signals fail or time out
+- The remote node becomes unreliable
+
+```rust
+// Decay formula (applied periodically)
+new_weight = current_weight * (1.0 - decay_rate)
+```
+
+### 6. Dormancy
+
+When a synapse's weight drops below the **dormancy threshold** (configurable, default 0.01), it enters a dormant state. Dormant synapses:
+
+- Stop actively transmitting signals
+- Retain their state in SiafuDB
+- Can be reactivated if the remote node sends a signal
+
+### 7. Pruning
+
+After a configurable dormancy period (default: 7 days), dormant synapses are pruned — their state is archived and the connection resources are released.
+
+## Transport Bindings
+
+Synapses are transport-agnostic. The actual bytes move over a configurable transport layer:
+
+| Transport | Use Case | Properties |
+|---|---|---|
+| QUIC | Default for internet | Multiplexed, encrypted, low latency |
+| TCP | Fallback | Reliable, widely supported |
+| Unix Socket | Same-machine nodes | Zero network overhead |
+| Bluetooth LE | Proximity mesh | Offline-capable, IoT |
+| Custom | Specialized | Application-defined |
+
+QUIC is the preferred transport because it provides multiplexing (multiple signal streams over one connection), built-in encryption, and connection migration — all critical for mobile and intermittent-connectivity environments.
+
+## Synapse Topology
+
+The collection of all synapses in the network forms the **synapse topology** — a weighted, directed graph. This topology is:
+
+- **Self-organizing** — No central authority defines it
+- **Adaptive** — It reshapes based on actual signal patterns
+- **Resilient** — Node failures cause local topology adjustment, not global disruption
+- **Observable** — Nodes can inspect their local topology for monitoring and debugging
+
+### Local vs Global Topology
+
+No single node knows the full network topology. Each node maintains knowledge of:
+
+- Its **direct synapses** (immediate connections)
+- **Nearby topology** (2-3 hops, learned through signal traces)
+- **Bootstrap references** (known stable nodes for re-entry)
+
+This local-knowledge design is critical for scalability and privacy.
+
+## Configuration
+
+Synapse behavior is configurable per-node:
+
+```toml
+[synapse]
+initial_weight = 0.1
+max_weight = 1.0
+decay_rate = 0.01            # Weight decay per hour
+dormancy_threshold = 0.01
+prune_after_hours = 168      # 7 days
+max_synapses = 1000          # Per-node connection limit
+
+[synapse.transport]
+preferred = "quic"
+fallback = "tcp"
+```

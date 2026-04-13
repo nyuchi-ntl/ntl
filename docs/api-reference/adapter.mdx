@@ -1,0 +1,93 @@
+---
+title: Adapter
+description: Adapter trait and built-in implementations API
+---
+
+# Adapter API
+
+Adapters translate between NTL signals and external protocols.
+
+## Adapter Trait
+
+```rust
+trait Adapter: Send + Sync {
+    /// Translate external payload to NTL signal
+    fn ingest(&self, external: ExternalPayload) -> Result<Signal>;
+
+    /// Translate NTL signal to external payload
+    fn emit(&self, signal: Signal) -> Result<ExternalPayload>;
+
+    /// External protocol identifier
+    fn protocol(&self) -> Protocol;
+
+    /// Adapter capabilities
+    fn capabilities(&self) -> AdapterCapabilities;
+
+    /// Start the adapter
+    async fn start(&self) -> Result<()>;
+
+    /// Stop the adapter
+    async fn stop(&self) -> Result<()>;
+
+    /// Health check
+    fn health(&self) -> AdapterHealth;
+}
+```
+
+## ExternalPayload
+
+```rust
+struct ExternalPayload {
+    data: Vec<u8>,
+    content_type: String,
+    metadata: HashMap<String, String>,
+}
+```
+
+## AdapterHealth
+
+```rust
+enum AdapterHealth {
+    Healthy,
+    Degraded { reason: String },
+    Unhealthy { reason: String },
+}
+```
+
+## Built-in Adapters
+
+### Web2Adapter
+
+```rust
+use ntl::adapter::Web2Adapter;
+
+let adapter = Web2Adapter::builder()
+    .with_http("0.0.0.0:8080")
+    .with_websocket("0.0.0.0:8081")
+    .with_tls(true)
+    .build()?;
+
+node.register_adapter(adapter).await?;
+```
+
+### Web3Adapter
+
+```rust
+use ntl::adapter::Web3Adapter;
+
+let adapter = Web3Adapter::builder()
+    .with_chain("ethereum", "https://mainnet.infura.io/v3/...")
+    .with_did(true)
+    .build()?;
+
+node.register_adapter(adapter).await?;
+```
+
+### LegacyAdapter
+
+```rust
+use ntl::adapter::LegacyAdapter;
+
+let adapter = LegacyAdapter::from_config("legacy-endpoints.toml")?;
+node.register_adapter(adapter).await?;
+```

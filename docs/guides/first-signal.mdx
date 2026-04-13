@@ -1,0 +1,215 @@
+---
+title: Your First Signal Handler
+description: Build an application that processes NTL signals
+---
+
+# Your First Signal Handler
+
+This guide walks through building a simple application that emits and processes NTL signals.
+
+## What We're Building
+
+A basic key-value store that:
+- Accepts `Command` signals to store values
+- Accepts `Query` signals to retrieve values
+- Responds with `Data` signals containing results
+
+This demonstrates the core pattern: **signals in, signals out.**
+
+## Setup
+
+```bash
+cargo new ntl-kv-store
+cd ntl-kv-store
+cargo add ntl tokio serde serde_json
+```
+
+## Define Signal Handlers
+
+```rust
+use ntl::{Node, Signal, SignalType, SignalHandler};
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
+type Store = Arc<RwLock<HashMap<String, serde_json::Value>>>;
+
+struct SetHandler {
+    store: Store,
+}
+
+impl SignalHandler for SetHandler {
+    fn signal_type(&self) -> SignalType {
+        SignalType::Command
+    }
+
+    fn tags(&self) -> Vec<&str> {
+        vec!["kv", "set"]
+    }
+
+    async fn handle(&self, signal: Signal) -> Result<Option<Signal>, ntl::Error> {
+        let key = signal.payload.get("key")
+            .and_then(|v| v.as_str())
+            .ok_or(ntl::Error::InvalidPayload("missing key"))?;
+
+        let value = signal.payload.get("value")
+            .ok_or(ntl::Error::InvalidPayload("missing value"))?;
+
+        // Store the value
+        let mut store = self.store.write().await;
+        store.insert(key.to_string(), value.clone());
+
+        // Respond with acknowledgment
+        Ok(Some(
+            Signal::data("kv-set-ack")
+                .with_correlation(signal.id)
+                .with_payload(serde_json::json!({
+                    "status": "ok",
+                    "key": key,
+                }))
+                .with_weight(0.5)
+        ))
+    }
+}
+
+struct GetHandler {
+    store: Store,
+}
+
+impl SignalHandler for GetHandler {
+    fn signal_type(&self) -> SignalType {
+        SignalType::Query
+    }
+
+    fn tags(&self) -> Vec<&str> {
+        vec!["kv", "get"]
+    }
+
+    async fn handle(&self, signal: Signal) -> Result<Option<Signal>, ntl::Error> {
+        let key = signal.payload.get("key")
+            .and_then(|v| v.as_str())
+            .ok_or(ntl::Error::InvalidPayload("missing key"))?;
+
+        let store = self.store.read().await;
+        let value = store.get(key).cloned();
+
+        Ok(Some(
+            Signal::data("kv-get-result")
+                .with_correlation(signal.id)
+                .with_payload(serde_json::json!({
+                    "key": key,
+                    "value": value,
+                    "found": value.is_some(),
+                }))
+                .with_weight(0.5)
+        ))
+    }
+}
+```
+
+## Wire It Together
+
+```rust
+#[tokio::main]
+async fn main() -> Result<(), ntl::Error> {
+    // Shared store
+    let store: Store = Arc::new(RwLock::new(HashMap::new()));
+
+    // Initialize node
+    let node = Node::builder()
+        .with_config_file("~/.ntl/config.toml")
+        .build()
+        .await?;
+
+    // Register handlers
+    node.register_handler(SetHandler { store: store.clone() }).await?;
+    node.register_handler(GetHandler { store: store.clone() }).await?;
+
+    // Announce capabilities
+    Signal::discovery()
+        .with_payload(serde_json::json!({
+            "service": "kv-store",
+            "operations": ["set", "get"],
+            "tags": ["kv"],
+        }))
+        .with_scope(ntl::PropagationScope::Flood { max_hops: 3 })
+        .emit(&node)
+        .await?;
+
+    println!("KV Store node running. Listening for signals...");
+
+    // Keep running
+    node.run_until_shutdown().await?;
+
+    Ok(())
+}
+```
+
+## Test It
+
+In another terminal, use the NTL CLI:
+
+```bash
+# Set a value
+ntl emit \
+  --type command \
+  --tags kv,set \
+  --payload '{"key": "greeting", "value": "hello from NTL"}' \
+  --wait-correlation 5s
+
+# Output:
+# ✓ Signal emitted: 01HYX4A...
+# ✓ Correlated response received:
+#   {"status": "ok", "key": "greeting"}
+
+# Get the value
+ntl emit \
+  --type query \
+  --tags kv,get \
+  --payload '{"key": "greeting"}' \
+  --wait-correlation 5s
+
+# Output:
+# ✓ Signal emitted: 01HYX4B...
+# ✓ Correlated response received:
+#   {"key": "greeting", "value": "hello from NTL", "found": true}
+```
+
+## What Just Happened
+
+1. Your KV store node registered handlers for `Command` and `Query` signals tagged with `kv`
+2. It announced its capabilities via a `Discovery` signal
+3. The CLI emitted signals that propagated through the network
+4. Your handlers processed the signals and emitted correlated responses
+5. The CLI received the responses via correlation matching
+
+No URLs. No endpoints. No API routes. Just signals flowing through the network and being processed by capable nodes.
+
+## Key Patterns
+
+### Handler Registration
+
+Handlers declare what signal types and tags they process. The node's propagation controller uses this to determine which incoming signals to route to which handlers.
+
+### Discovery Announcement
+
+By emitting a `Discovery` signal, your node tells the network what it can do. Other nodes learn about your capabilities and can route relevant signals your way.
+
+### Correlation for Request-Response
+
+When you need a response to a specific signal, use correlation. The emitter sets a signal ID, the handler includes that ID as `correlation_id` in its response. The `--wait-correlation` flag in the CLI demonstrates this pattern.
+
+### Returning None
+
+Handlers can return `None` to process a signal without emitting a response. Useful for event logging, metrics collection, or side effects.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Building Adapters" icon="plug" href="/guides/building-adapters">
+    Expose your signal handlers via HTTP
+  </Card>
+  <Card title="SiafuDB Integration" icon="database" href="/guides/siafu-integration">
+    Persist state across signal handlers
+  </Card>
+</CardGroup>

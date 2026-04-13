@@ -1,0 +1,102 @@
+---
+title: Topology
+description: How the NTL network self-organizes
+---
+
+# Topology
+
+NTL networks are **self-organizing neural graphs**. No central authority defines the network structure. Instead, topology emerges from signal patterns, synapse formation, and natural selection of efficient paths.
+
+## Bootstrap
+
+Every network needs a starting point. NTL uses **bootstrap nodes** — well-known, stable nodes that serve as entry points for new participants.
+
+```toml
+[network]
+bootstrap_nodes = [
+    "ntl://bootstrap-1.nyuchi.com:4433",
+    "ntl://bootstrap-2.nyuchi.com:4433",
+    "ntl://bootstrap-af.nyuchi.com:4433",
+]
+```
+
+A new node connects to one or more bootstrap nodes, forms initial synapses, and begins participating in the network. Over time, it forms organic synapses with nodes it frequently exchanges signals with, and its dependency on bootstrap nodes diminishes.
+
+Bootstrap nodes are not special — they're regular NTL nodes that happen to be well-known and stable. Any node can serve as a bootstrap for others.
+
+## Discovery
+
+Nodes discover each other through three mechanisms:
+
+### 1. Discovery Signals
+
+Nodes periodically emit `Discovery` signals announcing their capabilities:
+
+```rust
+Signal::discovery()
+    .with_payload(NodeCapabilities {
+        signal_types: vec!["transaction", "query", "event"],
+        adapters: vec!["web2-http", "web3-ethereum"],
+        capacity: NodeCapacity::Medium,
+        region: "af-south-1",
+    })
+    .with_scope(PropagationScope::Flood { max_hops: 3 })
+    .emit(&node);
+```
+
+### 2. Trace-based Discovery
+
+When a node receives a signal, the signal's trace reveals other nodes in the network. If a node frequently receives valuable signals that traversed a particular node, it may form a direct synapse to reduce latency.
+
+### 3. Referral
+
+Nodes can refer each other. When a node receives a signal it can't handle, it can propagate a referral signal pointing to nodes better suited for that signal type.
+
+## Topology Patterns
+
+Over time, NTL networks develop recognizable patterns based on usage:
+
+### Hub and Spoke
+
+High-capacity nodes that handle many signal types naturally become hubs with many synapses. Edge nodes with specific purposes connect to hubs. This mirrors how the brain has densely connected regions (cortical hubs) with specialized areas.
+
+### Cluster
+
+Nodes that frequently exchange signals with each other form tightly connected clusters. Clusters connect to other clusters through bridge nodes. This mirrors how neural circuits form functional modules.
+
+### Gradient
+
+When certain signal types consistently flow in one direction through the network, gradient paths emerge — optimized channels for specific data flows.
+
+## Topology Health
+
+Nodes monitor their local topology health:
+
+```rust
+struct TopologyHealth {
+    active_synapses: u32,
+    avg_synapse_weight: f32,
+    connectivity_score: f32,    // How well-connected to the broader network
+    redundancy_score: f32,      // How many alternative paths exist
+    last_bootstrap_contact: u64, // Fallback health check
+}
+```
+
+If connectivity drops below a threshold, the node re-contacts bootstrap nodes to form new synapses.
+
+## Resilience
+
+NTL topology is inherently resilient:
+
+- **Node failure** — When a node goes offline, its synapses weaken and prune. Signals automatically route through alternative paths. No global reconfiguration needed.
+- **Network partition** — Partitioned segments continue operating independently. When connectivity restores, synapses reform and state reconciles through SiafuDB's CRDT-based sync.
+- **Adversarial nodes** — Nodes that emit invalid signals or refuse to propagate develop weak synapses and get naturally isolated by the topology.
+
+## Privacy
+
+NTL's local-knowledge topology model is privacy-preserving by default:
+
+- No node knows the full topology
+- Signal traces can be truncated for privacy
+- Nodes only know their direct synapses and nearby topology
+- There is no central registry of participants

@@ -1,0 +1,101 @@
+---
+title: RFC Process
+description: How to propose changes to the NTL specification
+---
+
+# RFC Process
+
+Significant changes to the NTL specification go through a Request for Comments (RFC) process. This ensures that protocol changes are well-considered, publicly discussed, and documented.
+
+## What Requires an RFC
+
+- New signal types
+- Changes to the wire format
+- New propagation scopes
+- Changes to the crypto interface
+- New required adapter types
+- Breaking changes to any specification document
+
+## What Doesn't Require an RFC
+
+- Bug fixes in the reference implementation
+- Documentation improvements
+- New optional features that don't affect the protocol
+- Performance optimizations
+- Tooling and developer experience improvements
+
+## RFC Lifecycle
+
+```
+Draft → Discussion → Review → Accepted/Rejected → Implemented
+```
+
+### 1. Draft
+
+Create a new file in the `rfcs/` directory of the NTL repository:
+
+```
+rfcs/0001-signal-compression.md
+```
+
+Use the RFC template:
+
+```markdown
+# RFC-XXXX: [Title]
+
+- **Author:** [Name]
+- **Status:** Draft
+- **Created:** [Date]
+- **Updated:** [Date]
+
+## Summary
+
+One paragraph description.
+
+## Motivation
+
+Why is this change needed?
+
+## Specification
+
+Detailed technical specification of the change.
+
+## Backward Compatibility
+
+How does this affect existing implementations?
+
+## Security Considerations
+
+What are the security implications?
+
+## Alternatives Considered
+
+What other approaches were evaluated?
+
+## References
+
+Related documents, prior art, research.
+```
+
+### 2. Discussion
+
+Open a pull request with the RFC. Discussion happens in the PR comments. The author should actively engage with feedback and update the RFC.
+
+### 3. Review
+
+After sufficient discussion (minimum 14 days), the RFC enters formal review. Reviewers include:
+- NTL core maintainers
+- Domain experts (crypto, networking, etc.)
+- Community members who expressed interest
+
+### 4. Decision
+
+RFCs are accepted by consensus among core maintainers, with community input weighed heavily. Decisions are documented in the RFC itself.
+
+### 5. Implementation
+
+Accepted RFCs are implemented in the reference implementation and the specification is updated accordingly. The RFC number is referenced in the spec changes.
+
+## RFC Numbering
+
+RFCs are numbered sequentially starting from 0001. Numbers are assigned when the draft PR is opened.

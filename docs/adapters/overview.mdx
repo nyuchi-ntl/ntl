@@ -1,0 +1,114 @@
+---
+title: Adapters Overview
+description: Connecting Web2, Web3, and legacy systems to NTL
+---
+
+# Adapters
+
+**Adapters** are the compatibility boundary where NTL interfaces with existing systems. They translate between NTL's signal-based transport and traditional protocols.
+
+Think of adapters as the peripheral nervous system — they interface with the external world using whatever language external systems speak, while internally everything is neural signals.
+
+## Architecture
+
+```
+External World                    NTL Network
+─────────────                    ───────────
+                  ┌──────────┐
+HTTP Request  ──▶ │          │ ──▶ Signal
+                  │ Adapter  │
+HTTP Response ◀── │          │ ◀── Signal
+                  └──────────┘
+
+Chain TX      ──▶ ┌──────────┐ ──▶ Signal
+                  │ Adapter  │
+Chain Event   ◀── └──────────┘ ◀── Signal
+
+gRPC Call     ──▶ ┌──────────┐ ──▶ Signal
+                  │ Adapter  │
+gRPC Response ◀── └──────────┘ ◀── Signal
+```
+
+## Adapter Types
+
+### Web2 Adapter
+
+Translates HTTP, gRPC, WebSocket, and GraphQL into NTL signals. This is how existing web applications, APIs, and services connect to NTL without modification.
+
+[Web2 Adapter Reference →](/adapters/web2)
+
+### Web3 Adapter
+
+Interfaces with blockchain networks, decentralized identity (DID), and token systems. Signals can carry chain-verifiable payloads, initiate smart contract calls, and verify identity through decentralized mechanisms.
+
+[Web3 Adapter Reference →](/adapters/web3)
+
+### Legacy API Adapter
+
+A specialized adapter for connecting legacy REST/SOAP APIs that can't be modified. The adapter wraps existing API endpoints and exposes them as NTL signal handlers.
+
+[Legacy API Adapter Reference →](/adapters/legacy-api)
+
+## The Adapter Contract
+
+All adapters implement the `Adapter` trait:
+
+```rust
+trait Adapter {
+    /// Translate an external request into an NTL signal
+    fn ingest(&self, external: ExternalPayload) -> Result<Signal>;
+
+    /// Translate an NTL signal into an external response
+    fn emit(&self, signal: Signal) -> Result<ExternalPayload>;
+
+    /// The external protocol this adapter speaks
+    fn protocol(&self) -> Protocol;
+
+    /// Health check
+    fn health(&self) -> AdapterHealth;
+}
+```
+
+## Building Custom Adapters
+
+NTL ships with Web2, Web3, and Legacy adapters. For specialized protocols, you can build custom adapters:
+
+```rust
+struct MqttAdapter {
+    broker: MqttClient,
+    node: NtlNode,
+}
+
+impl Adapter for MqttAdapter {
+    fn ingest(&self, external: ExternalPayload) -> Result<Signal> {
+        let mqtt_msg = MqttMessage::from_bytes(&external.data)?;
+        Ok(Signal::data(mqtt_msg.topic)
+            .with_payload(mqtt_msg.payload)
+            .with_weight(0.5))
+    }
+
+    fn emit(&self, signal: Signal) -> Result<ExternalPayload> {
+        let topic = signal.signal_type.to_string();
+        let payload = signal.payload.to_bytes()?;
+        Ok(ExternalPayload::mqtt(topic, payload))
+    }
+
+    fn protocol(&self) -> Protocol {
+        Protocol::Custom("mqtt".into())
+    }
+
+    fn health(&self) -> AdapterHealth {
+        AdapterHealth::from(self.broker.is_connected())
+    }
+}
+```
+
+## Adapter as API Gateway
+
+For organizations migrating from traditional architectures, NTL adapters can function as an API gateway — accepting REST/GraphQL traffic on the outside while internally routing through the neural transfer layer. This allows incremental adoption without rewriting existing clients.
+
+```
+Existing Mobile App ──HTTP──▶ Web2 Adapter ──Signal──▶ NTL Network
+Existing Web App ──GraphQL──▶ Web2 Adapter ──Signal──▶ NTL Network
+New AI Agent ────────Signal──▶ NTL Network (native)
+```

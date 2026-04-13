@@ -1,0 +1,68 @@
+---
+title: Legacy API Adapter
+description: Connect unmodifiable REST and SOAP APIs to NTL
+---
+
+# Legacy API Adapter
+
+The Legacy API adapter wraps existing REST, SOAP, and custom API endpoints, exposing them as NTL signal handlers. This enables organizations to bring legacy systems into the NTL network without modifying the original codebase.
+
+## Use Case
+
+Many organizations have critical systems that:
+- Cannot be modified (vendor software, regulatory constraints)
+- Use outdated protocols (SOAP, XML-RPC)
+- Have no plans to migrate to modern architectures
+
+The Legacy adapter acts as a **translation proxy** — it presents these systems as NTL nodes, handling all protocol translation transparently.
+
+## Configuration
+
+Legacy endpoints are configured declaratively:
+
+```toml
+[[adapter.legacy.endpoints]]
+name = "user-service"
+url = "https://legacy.internal/api/v1/users"
+method = "GET"
+signal_type = "query"
+response_signal_type = "data"
+auth = { type = "bearer", token_env = "LEGACY_API_TOKEN" }
+timeout_ms = 10000
+retry = { max_attempts = 3, backoff_ms = 1000 }
+
+[[adapter.legacy.endpoints]]
+name = "order-service"
+url = "https://legacy.internal/soap/orders"
+method = "POST"
+protocol = "soap"
+signal_type = "command"
+wsdl = "https://legacy.internal/soap/orders?wsdl"
+```
+
+## Signal Mapping
+
+The adapter maps signal fields to API request parameters:
+
+```toml
+[[adapter.legacy.endpoints]]
+name = "product-lookup"
+url = "https://legacy.internal/api/products/{id}"
+method = "GET"
+signal_type = "query"
+
+[adapter.legacy.endpoints.mapping]
+path_params = { id = "payload.product_id" }
+query_params = { include = "payload.fields" }
+headers = { "X-Request-ID" = "signal.id" }
+```
+
+## Health Monitoring
+
+The adapter continuously monitors legacy endpoints and adjusts its behavior:
+
+- **Healthy** — Normal signal processing
+- **Degraded** — Increased timeouts, reduced weight on responses
+- **Unhealthy** — Queues signals for retry, emits health warning signals
+
+This prevents a failing legacy system from cascading failures through the NTL network.

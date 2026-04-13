@@ -1,0 +1,75 @@
+---
+title: Specification Overview
+description: Formal specification of the Nyuchi Transfer Layer
+---
+
+# NTL Specification
+
+**Version:** 0.1.0-draft
+**Status:** Working Draft
+**Authors:** Nyuchi Africa
+**License:** Apache 2.0
+
+## Abstract
+
+The Nyuchi Transfer Layer (NTL) is a neural signal-based data transfer layer for modern compute systems. It replaces the request-response paradigm of traditional APIs with signal propagation through a self-organizing, weighted graph topology. NTL is designed for AI-native systems, Web3 compatibility, post-quantum cryptographic agility, and resource-constrained environments.
+
+## Status of This Document
+
+This is a working draft. The specification is under active development and subject to change. Feedback is welcome via the [GitHub repository](https://github.com/nyuchitech/ntl).
+
+## Conventions
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119.
+
+## Specification Documents
+
+The NTL specification is divided into the following documents:
+
+<CardGroup cols={2}>
+  <Card title="Signal Format" icon="wave-square" href="/spec/signal-format">
+    Binary format, fields, encoding, and validation rules for NTL signals
+  </Card>
+  <Card title="Synapse Lifecycle" icon="link" href="/spec/synapse-lifecycle">
+    Formation, state transitions, weight management, and pruning of synapses
+  </Card>
+  <Card title="Propagation Rules" icon="diagram-project" href="/spec/propagation-rules">
+    How signals route through the network topology
+  </Card>
+  <Card title="Activation Model" icon="bolt" href="/spec/activation-model">
+    Threshold-based signal processing and flow control
+  </Card>
+  <Card title="Crypto Interface" icon="key" href="/spec/crypto-interface">
+    Pluggable cryptographic module specification
+  </Card>
+  <Card title="Adapter Contract" icon="plug" href="/spec/adapter-contract">
+    Interface specification for protocol translation adapters
+  </Card>
+</CardGroup>
+
+## Design Goals
+
+1. **Signal-native** — The fundamental data unit is a signal, not a request
+2. **Self-organizing** — Network topology emerges from usage patterns
+3. **Crypto-agile** — No cryptographic scheme is hardcoded
+4. **Resource-efficient** — Designed for constrained devices and networks
+5. **Interoperable** — Adapters enable Web2, Web3, and legacy system connectivity
+6. **Open** — Fully open source, community-governed specification
+
+## Versioning
+
+The NTL specification follows semantic versioning:
+- **Major** — Breaking changes to signal format or core protocol semantics
+- **Minor** — Backward-compatible additions (new signal types, optional fields)
+- **Patch** — Clarifications and editorial corrections
+
+## Reference Implementation
+
+The reference implementation is maintained by Nyuchi Web Services in Rust:
+
+- **Repository:** [github.com/nyuchitech/ntl](https://github.com/nyuchitech/ntl)
+- **Language:** Rust
+- **Minimum Rust Version:** 1.75
+- **License:** Apache 2.0
+
+The reference implementation is authoritative for behavior not fully specified in this document. Where the specification and implementation differ, the specification takes precedence, and the implementation should be updated.

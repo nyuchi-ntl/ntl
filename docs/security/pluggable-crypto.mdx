@@ -1,0 +1,93 @@
+---
+title: Pluggable Cryptography
+description: How NTL treats cryptography as a swappable module
+---
+
+# Pluggable Cryptography
+
+NTL's most important security design decision: **cryptography is a module, not a foundation.**
+
+## The Problem with Hardcoded Crypto
+
+Every major protocol today has cryptographic assumptions baked into its core:
+
+- TLS uses RSA or ECDSA for key exchange
+- Bitcoin uses secp256k1 for signatures
+- Ethereum uses ECDSA with keccak256
+- HTTPS certificates depend on RSA/ECC
+
+When quantum computing breaks these schemes (not if — when), every protocol that hardcoded them faces an existential rewrite.
+
+## NTL's Approach
+
+NTL defines a **CryptoModule** interface that all cryptographic operations go through:
+
+```rust
+trait CryptoModule: Send + Sync {
+    /// Generate a new keypair
+    fn generate_keypair(&self) -> Result<(PublicKey, PrivateKey)>;
+
+    /// Sign a signal
+    fn sign(&self, data: &[u8], private_key: &PrivateKey) -> Result<Signature>;
+
+    /// Verify a signature
+    fn verify(&self, data: &[u8], signature: &Signature, public_key: &PublicKey) -> Result<bool>;
+
+    /// Encrypt data for a recipient
+    fn encrypt(&self, data: &[u8], recipient_public_key: &PublicKey) -> Result<Vec<u8>>;
+
+    /// Decrypt data
+    fn decrypt(&self, data: &[u8], private_key: &PrivateKey) -> Result<Vec<u8>>;
+
+    /// Key exchange for synapse establishment
+    fn key_exchange(
+        &self,
+        local_private: &PrivateKey,
+        remote_public: &PublicKey,
+    ) -> Result<SharedSecret>;
+
+    /// Hash function
+    fn hash(&self, data: &[u8]) -> Result<Hash>;
+
+    /// Module identifier
+    fn module_id(&self) -> &str;
+}
+```
+
+## Default Implementation
+
+NTL ships with a default `PostQuantumModule` that uses:
+
+| Operation | Algorithm | Standard |
+|---|---|---|
+| Signatures | CRYSTALS-Dilithium | NIST PQC |
+| Key Exchange | CRYSTALS-Kyber | NIST PQC |
+| Encryption | AES-256-GCM (symmetric) | NIST |
+| Hashing | BLAKE3 | — |
+
+These are the current NIST Post-Quantum Cryptography standards. When they're superseded, a new module is published — the protocol doesn't change.
+
+## Swapping Modules
+
+```toml
+[crypto]
+module = "post-quantum"  # Default
+# module = "classical"   # RSA/ECDSA for legacy compatibility
+# module = "hybrid"      # PQ + classical for transition period
+# module = "custom"      # Your implementation
+```
+
+Nodes can negotiate crypto modules during synapse handshake. If two nodes support different modules, they fall back to the highest common module or refuse the synapse.
+
+## Hybrid Mode
+
+During the transition period (now), NTL supports a **hybrid mode** that signs and encrypts with both classical and post-quantum algorithms. This provides backward compatibility with systems that don't yet support PQ crypto while maintaining quantum resistance.
+
+```rust
+// Hybrid signature: valid if EITHER scheme verifies
+// (protects against implementation bugs in new PQ schemes)
+HybridSignature {
+    classical: Ed25519Signature,
+    post_quantum: DilithiumSignature,
+}
+```

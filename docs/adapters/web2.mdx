@@ -1,0 +1,101 @@
+---
+title: Web2 Adapter
+description: Connect HTTP, gRPC, WebSocket, and GraphQL to NTL
+---
+
+# Web2 Adapter
+
+The Web2 adapter translates traditional web protocols into NTL signals and back. It enables existing web applications, microservices, and APIs to participate in the NTL network without modification.
+
+## Supported Protocols
+
+| Protocol | Ingest | Emit | Bidirectional |
+|---|---|---|---|
+| HTTP/HTTPS | ✅ | ✅ | Via correlation |
+| gRPC | ✅ | ✅ | Via streaming |
+| WebSocket | ✅ | ✅ | ✅ Native |
+| GraphQL | ✅ | ✅ | Subscriptions |
+| Server-Sent Events | — | ✅ | One-way |
+
+## HTTP Translation
+
+### Request → Signal
+
+```
+GET /api/users/123
+Authorization: Bearer <token>
+
+Becomes:
+
+Signal {
+    signal_type: Query,
+    payload: { path: "/api/users/123", method: "GET" },
+    weight: 0.5,
+    tags: ["http", "api", "users"],
+    metadata: { auth: "<token>" },
+}
+```
+
+### Signal → Response
+
+```
+Signal {
+    signal_type: Data,
+    correlation_id: <original_signal_id>,
+    payload: { id: 123, name: "..." },
+}
+
+Becomes:
+
+HTTP 200 OK
+Content-Type: application/json
+{ "id": 123, "name": "..." }
+```
+
+## Configuration
+
+```toml
+[adapter.web2]
+enabled = true
+bind_address = "0.0.0.0:8080"
+tls = true
+
+[adapter.web2.http]
+enabled = true
+timeout_ms = 30000
+max_body_size = "10MB"
+
+[adapter.web2.websocket]
+enabled = true
+ping_interval_ms = 30000
+
+[adapter.web2.grpc]
+enabled = false
+reflection = true
+
+[adapter.web2.graphql]
+enabled = false
+playground = true
+```
+
+## Request-Response Correlation
+
+HTTP is inherently request-response. NTL is signal-based. The Web2 adapter bridges this gap using **correlation**:
+
+1. HTTP request arrives, adapter creates a Signal with a unique ID
+2. Adapter holds the HTTP connection open
+3. Signal propagates through NTL
+4. A response Signal arrives with `correlation_id` matching the original
+5. Adapter translates the response Signal back to HTTP and sends it
+
+The adapter maintains a correlation table with configurable timeout (default: 30 seconds).
+
+## WebSocket Mode
+
+For WebSocket connections, the adapter operates in true bidirectional mode:
+
+- Each WebSocket message becomes a Signal
+- Signals addressed to the WebSocket client are pushed immediately
+- No correlation needed — the connection is persistent
+
+This makes WebSocket the closest Web2 protocol to NTL's native model.

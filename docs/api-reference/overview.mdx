@@ -1,0 +1,101 @@
+---
+title: API Reference Overview
+description: Rust API reference for the NTL runtime
+---
+
+# API Reference
+
+This section documents the public Rust API for the NTL runtime library.
+
+<Note>
+The API is under active development and subject to breaking changes until v1.0.0.
+</Note>
+
+## Crate Structure
+
+```
+ntl
+├── ntl::node          // Node initialization and management
+├── ntl::signal        // Signal creation, encoding, and types
+├── ntl::synapse       // Synapse management and configuration
+├── ntl::propagation   // Propagation engine and scopes
+├── ntl::activation    // Activation model and functions
+├── ntl::crypto        // Pluggable cryptographic modules
+├── ntl::adapter       // Adapter trait and built-in adapters
+├── ntl::siafu         // SiafuDB integration
+├── ntl::config        // Configuration loading
+└── ntl::testing       // Test utilities and mocks
+```
+
+## Quick Reference
+
+### Creating a Node
+
+```rust
+use ntl::Node;
+
+let node = Node::builder()
+    .with_config_file("config.toml")
+    .with_crypto_module("pq-v1")
+    .build()
+    .await?;
+```
+
+### Emitting Signals
+
+```rust
+use ntl::{Signal, SignalType};
+
+let signal = Signal::data("user-created")
+    .with_payload(serde_json::json!({"user_id": "abc123"}))
+    .with_weight(0.7)
+    .with_tags(vec!["user", "event"])
+    .emit(&node)
+    .await?;
+```
+
+### Handling Signals
+
+```rust
+use ntl::SignalHandler;
+
+struct MyHandler;
+
+impl SignalHandler for MyHandler {
+    fn signal_type(&self) -> SignalType { SignalType::Event }
+    fn tags(&self) -> Vec<&str> { vec!["user"] }
+
+    async fn handle(&self, signal: Signal) -> Result<Option<Signal>> {
+        println!("Received: {:?}", signal);
+        Ok(None)
+    }
+}
+
+node.register_handler(MyHandler).await?;
+```
+
+### Managing Synapses
+
+```rust
+let synapses = node.synapses().await?;
+for synapse in synapses {
+    println!("{}: weight={}, state={:?}", synapse.id, synapse.weight, synapse.state);
+}
+```
+
+## Module References
+
+<CardGroup cols={2}>
+  <Card title="Node" icon="server" href="/api-reference/node">
+    Node initialization, lifecycle, and management
+  </Card>
+  <Card title="Signal" icon="wave-square" href="/api-reference/signal">
+    Signal creation, types, and encoding
+  </Card>
+  <Card title="Synapse" icon="link" href="/api-reference/synapse">
+    Synapse management and configuration
+  </Card>
+  <Card title="Adapter" icon="plug" href="/api-reference/adapter">
+    Adapter trait and built-in implementations
+  </Card>
+</CardGroup>

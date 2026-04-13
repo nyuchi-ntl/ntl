@@ -1,0 +1,157 @@
+---
+title: Propagation
+description: How signals move through the NTL network
+---
+
+# Propagation
+
+**Propagation** is how signals move through the NTL network. Unlike traditional routing (where a router looks up a destination in a table), NTL propagation is **emergent** — signals flow through the synapse topology based on relevance, weight, and activation patterns.
+
+## Propagation Model
+
+Think of dropping a stone in water. The ripple propagates outward, weakening with distance. Obstacles deflect it. Channels concentrate it. NTL propagation works similarly, but through a weighted graph instead of a 2D surface.
+
+When a node fires (processes a signal), the propagation engine decides:
+
+1. **Should this signal propagate further?** (TTL, scope)
+2. **Which synapses should carry it?** (relevance, weight)
+3. **How should the signal be modified?** (weight attenuation)
+
+## Propagation Strategies
+
+### Flood
+
+The signal propagates to **all** active synapses. Simple but expensive. Used for discovery signals and emergency broadcasts.
+
+```rust
+PropagationScope::Flood { max_hops: 3 }
+```
+
+### Weighted
+
+The signal propagates to synapses above a **weight threshold**, strongest first. This is the default strategy — it naturally routes signals through the most-used paths.
+
+```rust
+PropagationScope::Weighted { min_synapse_weight: 0.3 }
+```
+
+### Targeted
+
+The signal is directed toward a specific node or set of nodes. The propagation engine finds the best path through the topology. Used for correlated responses and direct communication.
+
+```rust
+PropagationScope::Targeted { destination: NodeId }
+```
+
+### Gradient
+
+The signal follows a **gradient** — propagating toward nodes that have historically handled similar signal types. This creates emergent specialization, where certain paths become optimized for certain signal types.
+
+```rust
+PropagationScope::Gradient { signal_type: "transaction" }
+```
+
+## Path Selection
+
+When a node needs to propagate a signal, it selects paths using a scoring function:
+
+```rust
+fn score_synapse(synapse: &Synapse, signal: &Signal) -> f32 {
+    let weight_score = synapse.weight;
+    let latency_score = 1.0 / (1.0 + synapse.avg_latency_ns as f32);
+    let type_affinity = synapse.type_history.affinity_for(signal.signal_type);
+    let recency_score = recency_factor(synapse.last_active);
+
+    weight_score * 0.4
+    + latency_score * 0.2
+    + type_affinity * 0.3
+    + recency_score * 0.1
+}
+```
+
+Synapses are ranked by score, and the signal propagates to the top N (configurable).
+
+## Weight Attenuation
+
+As signals propagate, their weight decreases. This prevents signals from propagating indefinitely and creates natural locality — signals are strongest near their origin and weaken with distance.
+
+```rust
+fn attenuate(signal: &mut Signal, synapse: &Synapse) {
+    signal.weight *= synapse.attenuation_factor; // Default: 0.9
+}
+```
+
+A signal with initial weight 1.0 and attenuation factor 0.9:
+- After 1 hop: 0.9
+- After 3 hops: 0.729
+- After 5 hops: 0.590
+- After 10 hops: 0.349
+
+Combined with activation thresholds, this means signals naturally reach only as far as they're "strong enough" to trigger processing.
+
+## Time-to-Live (TTL)
+
+Every signal has a TTL — the maximum number of hops it can traverse. TTL prevents infinite propagation in cyclic topologies.
+
+```rust
+fn should_propagate(signal: &Signal) -> bool {
+    signal.ttl > 0 && signal.weight > MIN_PROPAGATION_WEIGHT
+}
+
+fn propagate(signal: &mut Signal) {
+    signal.ttl -= 1;
+}
+```
+
+## Trace
+
+Signals carry a **trace** — an ordered list of node IDs they've visited. The trace serves multiple purposes:
+
+- **Loop prevention** — Nodes check if they're already in the trace and skip
+- **Path learning** — Nodes can form new synapses with nodes in the trace
+- **Debugging** — The trace shows the exact path a signal took
+- **Response routing** — Targeted responses can follow the trace back
+
+## Signal Deduplication
+
+In a mesh topology, the same signal may arrive at a node via multiple paths. The propagation engine deduplicates by signal ID:
+
+```rust
+fn receive(&mut self, signal: Signal) {
+    if self.seen_signals.contains(&signal.id) {
+        return; // Already processed
+    }
+    self.seen_signals.insert(signal.id);
+    self.process(signal);
+}
+```
+
+The seen-signal cache is time-bounded (signals older than the max TTL window are evicted).
+
+## SiafuDB Interaction
+
+During propagation, signals can optionally **deposit** state into SiafuDB:
+
+- **Data signals** can write their payload to the local graph store
+- **Event signals** can create graph edges representing state transitions
+- **Query signals** can read from the local store and emit response signals
+
+This creates a network where knowledge accumulates at nodes — the more signals a node processes, the richer its local graph state becomes.
+
+## Configuration
+
+```toml
+[propagation]
+default_strategy = "weighted"
+default_ttl = 10
+min_propagation_weight = 0.01
+attenuation_factor = 0.9
+max_propagation_fanout = 5    # Max synapses per propagation
+dedup_cache_seconds = 300     # 5 minutes
+
+[propagation.scoring]
+weight_factor = 0.4
+latency_factor = 0.2
+affinity_factor = 0.3
+recency_factor = 0.1
+```

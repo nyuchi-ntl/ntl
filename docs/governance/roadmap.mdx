@@ -1,0 +1,86 @@
+---
+title: Roadmap
+description: NTL development roadmap and milestones
+---
+
+# Roadmap
+
+NTL development follows a phased approach, from specification to production readiness.
+
+## Phase 0: Foundation (Current)
+
+**Status:** In Progress
+
+- [x] Core concept definition
+- [x] Documentation skeleton (Mintlify)
+- [ ] Protocol specification v0.1.0
+- [ ] Signal format finalization
+- [ ] Crypto interface specification
+- [ ] Repository structure and CI/CD
+
+**Goal:** A complete, reviewable specification that any team could implement.
+
+## Phase 1: Reference Implementation
+
+**Status:** Not Started
+
+- [ ] Signal encoding/decoding (CBOR)
+- [ ] Node identity and keypair management
+- [ ] Crypto module: post-quantum default (Dilithium + Kyber)
+- [ ] Crypto module: classical (Ed25519 + X25519)
+- [ ] Synapse formation and handshake
+- [ ] Basic propagation engine (Weighted scope)
+- [ ] Activation gate (Step function)
+- [ ] CLI tooling (`ntl init`, `ntl start`, `ntl emit`, `ntl listen`)
+- [ ] Test network with bootstrap nodes
+
+**Goal:** A working Rust implementation that can form a network and propagate signals.
+
+## Phase 2: Adapters and Integration
+
+**Status:** Not Started
+
+- [ ] Web2 adapter (HTTP, WebSocket)
+- [ ] Web3 adapter (EVM chains, DID)
+- [ ] Legacy API adapter
+- [ ] SiafuDB integration
+- [ ] Correlation engine for request-response patterns
+- [ ] Signal compression (LZ4)
+- [ ] Edge node (lightweight) implementation
+
+**Goal:** NTL can connect to real-world systems and persist state.
+
+## Phase 3: Production Hardening
+
+**Status:** Not Started
+
+- [ ] Advanced propagation (Targeted, Gradient scopes)
+- [ ] Dynamic threshold tuning
+- [ ] Synapse topology optimization
+- [ ] Monitoring and observability (OpenTelemetry)
+- [ ] Performance benchmarking suite
+- [ ] Security audit
+- [ ] Formal verification of core protocol properties
+
+**Goal:** NTL is production-ready for real workloads.
+
+## Phase 4: Ecosystem
+
+**Status:** Not Started
+
+- [ ] Client libraries: Go, Python, TypeScript, C
+- [ ] Kubernetes operator
+- [ ] Docker images and compose files
+- [ ] Managed NTL service (Nyuchi Web Services)
+- [ ] Developer documentation and tutorials
+- [ ] Community governance formalization
+
+**Goal:** NTL has a thriving ecosystem and is used in production by multiple organizations.
+
+## Long-term Vision
+
+- Formal IETF standardization process
+- Quantum-era crypto module updates as standards evolve
+- Integration with AI agent frameworks as native transport
+- Global bootstrap network operated by community
+- NTL as the default transport for Mukoko and the broader Nyuchi ecosystem

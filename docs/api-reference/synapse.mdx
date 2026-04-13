@@ -1,0 +1,60 @@
+---
+title: Synapse
+description: Synapse management and configuration API
+---
+
+# Synapse API
+
+Synapses are persistent, weighted connections between nodes.
+
+## Synapse Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `SynapseId` | Unique identifier |
+| `remote_node` | `NodeId` | Connected node |
+| `weight` | `f32` | Current strength (0.0-1.0) |
+| `state` | `SynapseState` | Current lifecycle state |
+| `transport` | `Transport` | Underlying transport |
+| `established_at` | `u64` | Formation timestamp |
+| `last_active` | `u64` | Last signal timestamp |
+| `signals_transmitted` | `u64` | Total sent |
+| `signals_received` | `u64` | Total received |
+| `avg_latency_ns` | `u64` | Average latency |
+
+## SynapseState Enum
+
+```rust
+enum SynapseState {
+    Forming,
+    Active,
+    Weakening,
+    Dormant,
+    Pruned,
+}
+```
+
+## Querying Synapses
+
+```rust
+// All synapses
+let all = node.synapses().await?;
+
+// Filter by state
+let active = node.synapses()
+    .filter(|s| s.state == SynapseState::Active)
+    .await?;
+
+// Find by remote node
+let synapse = node.synapse_to(remote_node_id).await?;
+```
+
+## Manual Synapse Management
+
+```rust
+// Force form a synapse
+node.connect("ntl://remote-node:4433").await?;
+
+// Force prune a synapse
+node.disconnect(synapse_id).await?;
+```

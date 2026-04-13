@@ -1,0 +1,83 @@
+---
+title: Synapse Lifecycle
+description: Specification for synapse formation, state transitions, and pruning
+---
+
+# Synapse Lifecycle Specification
+
+**Version:** 0.1.0-draft
+
+## Overview
+
+This document specifies the lifecycle of NTL synapses — the persistent, weighted connections between nodes that form the network topology.
+
+## Synapse States
+
+A synapse MUST be in one of the following states:
+
+| State | Description |
+|---|---|
+| `FORMING` | Handshake in progress |
+| `ACTIVE` | Transmitting signals |
+| `WEAKENING` | Weight below active threshold, still connected |
+| `DORMANT` | Weight below dormancy threshold, connection idle |
+| `PRUNED` | Connection terminated, state archived |
+
+## State Transitions
+
+```
+FORMING ──▶ ACTIVE ──▶ WEAKENING ──▶ DORMANT ──▶ PRUNED
+               ▲            │           │
+               └────────────┘           │
+               ▲                        │
+               └────────────────────────┘
+                    (Reactivation)
+```
+
+## Formation Handshake
+
+Two nodes form a synapse through a three-step handshake:
+
+1. **SYN** — Initiating node sends identity, capabilities, and supported crypto modules
+2. **SYN-ACK** — Responding node confirms, sends its own identity and selects crypto module
+3. **ACK** — Initiating node confirms, synapse enters ACTIVE state
+
+The handshake MUST complete within 30 seconds or be abandoned.
+
+## Weight Management
+
+### Initial Weight
+
+New synapses MUST start with weight ≤ 0.1. This prevents new or unknown nodes from immediately gaining high propagation priority.
+
+### Weight Adjustment
+
+Weight increases when:
+- A signal is successfully transmitted and acknowledged: `w += signal.weight * 0.01`
+- Weight MUST NOT exceed the configured `max_weight` (default: 1.0)
+
+Weight decreases when:
+- Time passes without activity: `w *= (1.0 - decay_rate)` per decay interval
+- A signal transmission fails: `w *= 0.9`
+- An invalid signal is received: `w *= 0.5`
+
+### Thresholds
+
+| Threshold | Default | Transition |
+|---|---|---|
+| Active → Weakening | 0.1 | Weight drops below |
+| Weakening → Dormant | 0.01 | Weight drops below |
+| Dormant → Pruned | 0.01 for 168 hours | Duration in dormant |
+| Dormant → Active | 0.1 | Signal received, weight restored |
+
+## Transport Negotiation
+
+During handshake, nodes negotiate transport:
+
+1. Both nodes advertise supported transports (QUIC, TCP, Unix, Bluetooth LE)
+2. The highest-priority mutually supported transport is selected
+3. QUIC is the RECOMMENDED default
+
+## Synapse Limits
+
+Nodes SHOULD enforce a maximum synapse count to prevent resource exhaustion. The RECOMMENDED default is 1,000 active synapses per node. When the limit is reached, the node MUST reject new synapse requests or prune the weakest existing synapse.
