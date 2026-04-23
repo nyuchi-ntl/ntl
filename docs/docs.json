@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Nyuchi Transfer Layer",
-  "theme": "mint",
+  "theme": "maple",
   "logo": {
     "dark": "/logo/ntl-dark.svg",
     "light": "/logo/ntl-light.svg"
@@ -16,11 +16,12 @@
     "links": [
       {
         "label": "GitHub",
-        "href": "https://github.com/nyuchitech/ntl"
+        "href": "https://github.com/nyuchi-ntl/ntl"
       },
       {
         "type": "discord",
-        "href": "https://discord.gg/nyuchi"
+        "href": "https://discord.gg/nyuchi",
+        "label": "Discord"
       }
     ],
     "primary": {
@@ -129,5 +130,9 @@
       "github": "https://github.com/nyuchitech",
       "linkedin": "https://linkedin.com/company/nyuchi-africa"
     }
+  },
+  "fonts": {
+    "family": "noto",
+    "weight": 500
   }
 }
