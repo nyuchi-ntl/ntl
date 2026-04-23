@@ -2,7 +2,6 @@
   "$schema": "https://mintlify.com/docs.json",
   "name": "Nyuchi Transfer Layer",
   "theme": "maple",
-  "favicon": "/favicon.svg",
   "colors": {
     "primary": "#E85D26",
     "light": "#F2A93B",
@@ -155,5 +154,6 @@
     "light": "/images/ntl-icon-light.png",
     "dark": "/images/ntl-icon-dark.png",
     "href": "https://ntl.nyuchi.com"
-  }
+  },
+  "favicon": "/images/bundu-ecosystem-icons-nyuchi-icon-dark.png"
 }
