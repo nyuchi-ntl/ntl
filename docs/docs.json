@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Nyuchi Transfer Layer",
-  "theme": "maple",
+  "theme": "aspen",
   "colors": {
     "primary": "#8B4513",
     "light": "#8B4513",
