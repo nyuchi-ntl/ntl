@@ -1,10 +1,10 @@
 ---
-title: Node
-description: Node initialization, lifecycle, and management API
+title: "Node"
+description: "Node initialization, lifecycle, and management API"
+"og:title": "Node API — NTL API Reference"
+"og:description": "API reference for NTL node initialization, lifecycle management, and the NodeBuilder pattern."
+"twitter:title": "NTL Node API"
 ---
-
-# Node API
-
 The `Node` is the primary entry point for the NTL runtime.
 
 ## Node::builder()
@@ -16,7 +16,7 @@ let node = Node::builder()
     .with_config_file("~/.ntl/config.toml")    // Load from file
     .with_crypto_module("pq-v1")                // Set crypto module
     .with_bootstrap(vec![                        // Override bootstrap nodes
-        "ntl://bootstrap.nyuchi.com:4433",
+        "ntl://bootstrap.openntl.org:4433",
     ])
     .with_max_synapses(500)                     // Synapse limit
     .build()

@@ -1,4 +1,4 @@
-//! Error types for the Nyuchi Transfer Layer.
+//! Error types for the Neural Transfer Layer.
 
 use thiserror::Error;
 

@@ -1,0 +1,222 @@
+---
+title: "03 — Neural Network as Base Layer"
+description: "Not code that simulates a neural network. An actual neural network that IS the infrastructure."
+mode: "wide"
+"og:title": "Neural Network as Base Layer — NTL Research"
+"og:description": "Why NTL is an actual neural network that IS the infrastructure, not code that simulates one. Architecture design research."
+"twitter:title": "Neural Network as Base Layer"
+---
+
+> Not code that simulates a neural network. An actual neural network that IS the infrastructure.
+
+**Status:** RESEARCH — Architecture design
+
+---
+
+## The Shift
+
+The initial signal primitive design implemented neural behaviour in imperative Rust code: iterate over synapses, multiply weight by signal, check threshold, propagate. This is a simulation of a neural network using conventional programming.
+
+The revised architecture uses an actual neural network as the routing engine. The synapse topology is a neural network model. Signal routing is neural network inference. Learning is model training. The model can run on hardware neural engines.
+
+This is the difference between writing code that acts like a neural network and deploying an actual neural network as infrastructure.
+
+---
+
+## Architecture
+
+### The Routing Model
+
+Each NTL node contains a small neural network model — the routing model. It is:
+
+- **Small:** Hundreds of parameters, not billions. Fits in cache.
+- **Fast:** Nanosecond inference on NPU, microseconds on CPU.
+- **Learnable:** Weights update based on traffic patterns.
+- **Portable:** ONNX format, runs on any platform with ONNX Runtime.
+- **Hardware-acceleratable:** Runs on Apple Neural Engine, Qualcomm Hexagon, Samsung NPU, Huawei Da Vinci.
+
+### Input Features
+
+The routing model doesn't just consider signal weight. It considers multiple features simultaneously:
+
+```
+Signal type         — What kind of data (vertex create, engagement, context update)
+Signal weight       — Priority level
+Source fragment     — Where it came from (personal, platform, network)
+Time features       — Hour, day of week, time since last signal
+Device state        — Battery level, connectivity quality, available bandwidth
+Synapse history     — Recent traffic on each outgoing connection
+Receiver activity   — How active each potential destination is
+```
+
+A simple weighted synapse evaluates `signal_weight * synapse_weight`. The neural model evaluates all features simultaneously and makes richer decisions. "This engagement signal should go to analytics now because the analytics pipeline is active and has bandwidth, but should be queued for the content owner because their device is on battery saver" — this kind of context-aware routing is natural for a neural network and impossible for a simple weight multiplication.
+
+### Output
+
+The model outputs a score for each outgoing synapse: how strongly the signal should propagate through it. Synapses with scores above the activation threshold propagate. Others don't.
+
+### Execution Backends
+
+```rust
+pub enum RoutingBackend {
+    /// Hardware neural engine
+    /// Available on: iPhone A14+, Snapdragon 8 Gen 2+, Exynos 2400+, Kirin 9000+
+    /// Performance: nanosecond inference, negligible power
+    HardwareNPU,
+
+    /// ONNX Runtime on CPU
+    /// Available on: any platform with ONNX Runtime
+    /// Performance: microsecond inference
+    OnnxCpu,
+
+    /// Pure Rust weight-based fallback
+    /// Available on: everywhere (no dependencies)
+    /// Performance: microsecond inference
+    /// Capability: weight-only routing (no multi-feature context)
+    Fallback,
+}
+```
+
+The primitive automatically selects the best available backend. If the device has an NPU and the ONNX model is loaded, use the NPU. If ONNX Runtime is available but no NPU, use CPU inference. If neither, fall back to simple weight-based routing.
+
+---
+
+## Learning Mechanisms
+
+### Hebbian (Unsupervised)
+
+"Neurons that fire together wire together." Synapses that carry successful signals strengthen. This is the baseline learning rule — simple, fast, no gradient computation required.
+
+### Gradient-Based (Supervised)
+
+When the sync protocol reports delivery outcomes (success, conflict, failure), these become training labels. The routing model can be trained with gradient descent to optimise for delivery success, latency, or any other differentiable objective.
+
+This is more powerful than Hebbian because it can learn complex routing patterns that Hebbian cannot. But it requires more computation (backpropagation through the routing model) so it runs less frequently — maybe once per minute instead of on every signal.
+
+### Spike-Timing-Dependent (Temporal)
+
+Synapses that carry signals arriving just before the receiver needs them strengthen faster than synapses carrying late signals. This captures temporal patterns — "the analytics pipeline processes batches every 5 minutes, so signals arriving just before the batch window are more valuable than signals arriving just after."
+
+### Structural Plasticity
+
+New synapses form when traffic patterns suggest them. Two nodes that frequently exchange signals through a long indirect path form a direct synapse. Dormant synapses (weight below threshold, no traffic for configured period) are pruned.
+
+---
+
+## Transfer Learning
+
+A routing model trained on one deployment can initialise another:
+
+```
+1. Harare deployment runs for 4 weeks
+2. Routing model learns local traffic patterns
+3. Export model weights
+4. Lusaka deployment initialises with Harare's weights
+5. Lusaka fine-tunes on its own traffic
+6. Lusaka reaches efficient routing in days instead of weeks
+```
+
+This is identical to transfer learning in ML: pre-trained weights provide a starting point that reduces training time for new domains.
+
+---
+
+## Model Training Pipeline
+
+```
+┌─────────────────────────────────────────────────┐
+│  Training Data: Graph Sync Protocol feedback    │
+│                                                 │
+│  For each sync cycle:                           │
+│    Input: signal features + routing decision    │
+│    Label: delivery outcome (success/fail/delay) │
+│                                                 │
+│  Accumulated in a local training buffer         │
+└─────────────────────┬───────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────┐
+│  Training Step (periodic, e.g. every 60 seconds)│
+│                                                 │
+│  1. Sample batch from training buffer           │
+│  2. Forward pass: predict routing scores        │
+│  3. Compute loss vs actual delivery outcomes     │
+│  4. Backward pass: compute gradients            │
+│  5. Update routing model weights                │
+│  6. Clear training buffer                       │
+│                                                 │
+│  Runs on CPU (training is infrequent)           │
+│  Inference (routing) runs on NPU (every signal) │
+└─────────────────────────────────────────────────┘
+```
+
+Training and inference are separated:
+- **Inference** (routing each signal) runs on NPU — every signal, nanoseconds
+- **Training** (updating weights) runs on CPU — periodically, milliseconds
+
+This separation matches how ML systems work in production: inference on accelerator hardware, training on general-purpose compute.
+
+---
+
+## What This Enables That Simulation Cannot
+
+### 1. Hardware acceleration
+Simulation runs on CPU. The neural model runs on NPU — faster and lower power.
+
+### 2. Gradient-based learning
+Simulation implements hand-coded learning rules (Hebbian). The neural model can use any differentiable learning algorithm — SGD, Adam, reinforcement learning.
+
+### 3. Context-aware routing
+Simulation evaluates `weight * signal_weight`. The neural model evaluates signal type, source, time, device state, receiver activity, and synapse history simultaneously.
+
+### 4. Transfer learning
+Simulation learns from scratch on every deployment. The neural model can start from pre-trained weights.
+
+### 5. Composable with ML ecosystem
+The routing model is an ONNX model. It can be analysed, visualised, and optimised with existing ML tools (TensorBoard, Weights & Biases, ONNX visualisers). The ML ecosystem that engineers already know works directly on NTL's routing infrastructure.
+
+---
+
+## Feasibility
+
+### Is the engineering path clear? Yes.
+
+- ONNX Runtime has Rust bindings (`ort` crate)
+- ONNX models can target Core ML (iOS), NNAPI (Android), and other NPU backends
+- The routing model is tiny — hundreds of parameters, well within NPU capability
+- Training pipeline uses standard ML techniques, no novel algorithms required
+- Hebbian + gradient hybrid learning is well-studied in computational neuroscience
+
+### What's novel?
+
+- Applying neural network inference to data routing (no prior work in production systems)
+- Using hardware neural engines for infrastructure routing (NPUs have only been used for ML inference, not for infrastructure decisions)
+- The training loop being the sync protocol itself (the protocol that moves data also trains the routing)
+- Twelve neural principles instead of five (going beyond what PyTorch implements)
+
+### What risks exist?
+
+- NPU access APIs vary across platforms (Core ML vs NNAPI vs proprietary)
+- Training on-device must be lightweight (can't drain battery for weight updates)
+- The routing model must be robust to adversarial traffic patterns
+- Privacy: routing features (device state, activity patterns) must not leak through the model
+
+---
+
+## Implementation Phases
+
+| Phase | What | Backend |
+|-------|------|---------|
+| 1 | Signal primitive with weight-based routing | Pure Rust (fallback) |
+| 2 | ONNX routing model with CPU inference | ONNX Runtime |
+| 3 | NPU acceleration on iOS and Android | Core ML + NNAPI |
+| 4 | Gradient-based training pipeline | CPU training + NPU inference |
+| 5 | Transfer learning across deployments | Model export/import |
+| 6 | Advanced principles (inhibition, recurrence, etc) | Full stack |
+
+Phase 1 proves the signal primitive concept. Phase 2 proves the neural routing concept. Phase 3 proves the hardware acceleration. Each phase is independently valuable. Each phase builds on the previous.
+
+---
+
+*Neural Network as Base Layer — April 2026 — The Bundu Foundation*
+
+*"The infrastructure IS the model. The traffic IS the training data. The routing IS the inference."*

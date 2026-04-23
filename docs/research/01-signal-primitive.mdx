@@ -1,0 +1,279 @@
+---
+title: "01 — The Signal Primitive"
+description: "A new concurrency primitive. Not a simulation of a neural network — it IS a neural network."
+mode: "wide"
+"og:title": "The Signal Primitive — NTL Research"
+"og:description": "A new concurrency primitive that IS a neural network, not a simulation of one. The foundational research behind NTL's signal model."
+"twitter:title": "The Signal Primitive"
+---
+
+> A new concurrency primitive. Not a simulation of a neural network — it IS a neural network.
+
+**Proposed crate:** `ntl-signal`
+**Licence:** Apache 2.0
+
+---
+
+## Abstract
+
+The signal primitive is a new concurrency paradigm for neural-style computing. Unlike channels (CSP, 1978), actors (Hewitt, 1973), or streams (reactive programming), the signal primitive provides unaddressed emission, topological routing, transformation at junctions, activation thresholds, and connection learning — all executable by hardware neural engines on modern devices.
+
+The signal primitive is not code that simulates neural behaviour. It IS a neural network, representable as a model that hardware NPUs can execute natively.
+
+---
+
+## 1. Why a New Primitive
+
+### Existing Primitives
+
+| Primitive | Model | Routing | Transform | Learning | Hardware |
+|-----------|-------|---------|-----------|----------|----------|
+| Channel | CSP | Addressed | None | None | CPU only |
+| Actor | Actor model | Addressed | App logic | None | CPU only |
+| Stream | Reactive | Pipeline | Operators | None | CPU only |
+| **Signal** | **Neural** | **Topological** | **At synapse** | **Hebbian + gradient** | **CPU + NPU** |
+
+No existing primitive supports unaddressed emission, weighted propagation, junction transformation, activation thresholds, connection learning, or hardware neural engine acceleration.
+
+---
+
+## 2. Core Types
+
+### Node
+
+```rust
+pub struct Node<T: Signal> {
+    id: NodeId,
+    activation_threshold: f32,
+    accumulated_activation: f32,
+    outgoing: Vec<Synapse<T>>,
+    on_activation: Option<Box<dyn Fn(ActivationContext<T>) + Send>>,
+    config: NodeConfig,
+}
+```
+
+### Signal
+
+```rust
+pub trait Signal: Send + Sync + Clone + 'static {
+    fn signal_type(&self) -> &str;
+    fn weight(&self) -> f32;
+}
+```
+
+### Synapse
+
+```rust
+pub struct Synapse<T: Signal> {
+    weight: f32,
+    type_filter: Option<String>,
+    transform: Option<Arc<dyn Fn(T) -> Option<T> + Send + Sync>>,
+    learning_rule: LearningRule,
+    stats: SynapseStats,
+}
+```
+
+### Learning Rules
+
+```rust
+pub enum LearningRule {
+    Fixed,
+    Hebbian { rate: f32 },
+    Decay { half_life_seconds: f32 },
+    Gradient { learning_rate: f32, optimizer: Optimizer },
+    SpikeTiming { window_ms: f32 },
+    Custom(Arc<dyn Fn(&SynapseStats) -> f32 + Send + Sync>),
+}
+```
+
+---
+
+## 3. Core Operations
+
+### Emission (no destination)
+
+```rust
+impl<T: Signal> Node<T> {
+    pub fn emit(&self, signal: T) {
+        // Route through neural model (NPU if available, CPU fallback)
+        let routing_scores = self.routing_model.infer(&signal);
+
+        for (synapse, score) in self.outgoing.iter().zip(routing_scores) {
+            if score < synapse.activation_threshold { continue; }
+
+            let propagated = match &synapse.transform {
+                Some(f) => f(signal.clone()),
+                None => Some(signal.clone()),
+            };
+
+            if let Some(sig) = propagated {
+                synapse.target.accumulate(sig, sig.weight() * synapse.weight * score);
+            }
+        }
+    }
+}
+```
+
+### Activation (threshold-triggered, not pulled)
+
+```rust
+impl<T: Signal> Node<T> {
+    fn accumulate(&self, signal: T, effective_weight: f32) {
+        self.accumulated_activation += effective_weight;
+        if self.accumulated_activation >= self.activation_threshold {
+            self.accumulated_activation = 0.0;
+            if let Some(handler) = &self.on_activation {
+                handler(ActivationContext { signal, node_id: self.id });
+            }
+        }
+    }
+}
+```
+
+---
+
+## 4. The Neural Network IS the Routing Engine
+
+### Not Simulation — The Real Thing
+
+The routing model inside each node is an actual neural network model:
+
+```rust
+pub struct RoutingModel {
+    /// The neural network (ONNX format)
+    model: OnnxModel,
+
+    /// Execution backend
+    backend: RoutingBackend,
+
+    /// Input features for routing decisions
+    input_features: RoutingFeatures,
+}
+
+pub enum RoutingBackend {
+    /// Hardware neural engine (Apple Neural Engine, Qualcomm Hexagon, etc)
+    /// Nanosecond inference, minimal power
+    HardwareNPU,
+
+    /// ONNX Runtime on CPU
+    /// Microsecond inference, moderate power
+    OnnxCpu,
+
+    /// Pure Rust weight-based fallback
+    /// For environments without ONNX Runtime (some WASM, embedded)
+    Fallback,
+}
+```
+
+### What the Routing Model Considers
+
+The routing model's input is not just the signal weight. It considers multiple features simultaneously:
+
+```rust
+pub struct RoutingFeatures {
+    signal_type: Vec<f32>,          // One-hot encoded signal type
+    signal_weight: f32,             // Priority
+    source_fragment_kind: Vec<f32>, // Personal, Network, Platform, etc
+    time_features: Vec<f32>,        // Hour, day of week, time since last signal
+    device_state: Vec<f32>,         // Battery level, connectivity quality
+    synapse_history: Vec<f32>,      // Recent traffic on each outgoing synapse
+    receiver_activity: Vec<f32>,    // How active each potential receiver is
+}
+```
+
+A weighted synapse can only consider `signal_weight * synapse_weight`. The neural routing model considers all these factors simultaneously and makes richer routing decisions.
+
+### Hardware Acceleration
+
+On devices with NPUs:
+
+| Device | NPU | Performance |
+|--------|-----|-------------|
+| iPhone (A14+) | Apple Neural Engine | 15.8 TOPS, nanosecond inference |
+| Android (Snapdragon 8 Gen 2+) | Qualcomm Hexagon | 12.4 TOPS |
+| Android (Exynos 2400+) | Samsung NPU | 14.7 TOPS |
+| Huawei (Kirin 9000+) | Da Vinci NPU | 8 TOPS |
+
+TOPS = Trillion Operations Per Second. NTL's routing model is tiny (hundreds of parameters, not billions). A single routing inference on any of these NPUs takes nanoseconds and consumes negligible battery.
+
+**This means NTL routing is faster AND uses less power than traditional API-based routing on every modern phone.** The NPU that currently sits idle between camera shots becomes the engine that routes your data.
+
+---
+
+## 5. Transport Layer Hierarchy
+
+```
+┌───────────────────────────────────────────────┐
+│  Fabric Layer (global) — IPv6 required        │
+│  Full NTL routing. Routing model on NPU.      │
+├───────────────────────────────────────────────┤
+│  Network Layer (LAN) — IPv4 or IPv6           │
+│  TCP/QUIC + mDNS. Routing model on NPU/CPU.  │
+├───────────────────────────────────────────────┤
+│  Local Layer (same machine)                   │
+│  Unix sockets / shared memory. CPU routing.   │
+├───────────────────────────────────────────────┤
+│  Channel Layer (same process)                 │
+│  Rust channels. CPU routing.                  │
+│  Foundation everything builds on.             │
+└───────────────────────────────────────────────┘
+```
+
+Layer selection is automatic based on node location.
+
+---
+
+## 6. The Twelve Neural Principles
+
+NTL draws from twelve principles, not just PyTorch's five.
+
+### The Original Five (PyTorch implements these)
+
+1. **Weighted graph** — Nodes connected by weighted edges
+2. **Forward propagation** — Signals flow through the network
+3. **Junction transformation** — Data changes at each connection
+4. **Learning** — Weights adjust based on outcomes
+5. **Improvement over time** — Network gets smarter with experience
+
+### The Additional Seven (NTL implements these too)
+
+6. **Inhibition** — Signals suppress other signals. High-priority traffic dampens low-priority.
+7. **Recurrence** — Feedback loops. Context circulates through the network, staying alive.
+8. **Neuromodulation** — Meta-signals change network-wide behaviour. "High load" reduces sensitivity globally.
+9. **Rich plasticity** — Spike-timing-dependent learning. New connections form where traffic patterns suggest them. Dormant connections die.
+10. **Hierarchical processing** — Multiple abstraction levels simultaneously. Raw data, patterns, recommendations processed in parallel.
+11. **Sparse activation** — Most nodes dormant. Minimal power when idle. Only active paths consume resources.
+12. **Multi-scale temporality** — Millisecond propagation, second adaptation, hour learning, week topology evolution.
+
+Not all twelve are needed in v1. The architecture must be capable of expressing all of them.
+
+---
+
+## 7. Integration with SiafuDB
+
+### Current: GSPN Adapter
+
+SiafuDB's GSPN adapter emits signals through a local NTL node. NTL routes, transforms, and delivers. The sync protocol provides training feedback.
+
+### Future: SiafuDB Internal Signals
+
+SiafuDB's internal components become signal nodes. Mutations propagate as continuous signals from the storage engine through the change log and out through NTL, with no paradigm boundary between database processing and network communication.
+
+---
+
+## 8. Implementation Roadmap
+
+| Phase | Deliverable | Hardware |
+|-------|-------------|----------|
+| 1 | `ntl-signal` crate: Node, Signal, Synapse, in-process transport | CPU only |
+| 2 | Routing model: ONNX-based neural routing | CPU (ONNX Runtime) |
+| 3 | Hardware acceleration: NPU integration | Apple Neural Engine, Qualcomm Hexagon |
+| 4 | Local + network transport layers | CPU + NPU |
+| 5 | Fabric layer with IPv6 | CPU + NPU |
+| 6 | Advanced principles: inhibition, recurrence, neuromodulation | CPU + NPU |
+
+---
+
+*Signal Primitive Design — April 2026 — The Bundu Foundation*
+
+*"Not a simulation of a neural network. It IS a neural network."*

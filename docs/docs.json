@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "name": "Nyuchi Transfer Layer",
+  "name": "Neural Transfer Layer",
   "theme": "aspen",
   "colors": {
     "primary": "#8B4513",
@@ -116,13 +116,30 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Research",
+        "groups": [
+          {
+            "group": "Research",
+            "pages": [
+              "research/overview",
+              "research/01-signal-primitive",
+              "research/02-machine-learning-principles",
+              "research/03-neural-network-base-layer",
+              "research/04-network-transport-ipv6",
+              "research/05-twelve-principles",
+              "research/06-first-steps"
+            ]
+          }
+        ]
       }
     ]
   },
   "footer": {
     "socials": {
       "x": "https://x.com/nyuchiafrica",
-      "github": "https://github.com/nyuchitech",
+      "github": "https://github.com/nyuchi-ntl",
       "linkedin": "https://linkedin.com/company/nyuchi-africa"
     }
   },
@@ -153,7 +170,7 @@
   "logo": {
     "light": "/images/ntl-icon-light.png",
     "dark": "/images/ntl-icon-dark.png",
-    "href": "https://ntl.nyuchi.com"
+    "href": "https://openntl.org"
   },
   "favicon": "/images/bundu-ecosystem-icons-nyuchi-icon-dark.png",
   "background": {
@@ -165,5 +182,15 @@
   },
   "appearance": {
     "default": "system"
+  },
+  "metadata": {
+    "og:site_name": "Neural Transfer Layer",
+    "og:type": "website",
+    "og:locale": "en_US",
+    "twitter:site": "@nyuchiafrica",
+    "twitter:card": "summary_large_image"
+  },
+  "seo": {
+    "indexHiddenPages": false
   }
 }

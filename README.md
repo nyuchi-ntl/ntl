@@ -1,9 +1,9 @@
-# Nyuchi Transfer Layer (NTL)
+# Neural Transfer Layer (NTL)
 
 **The Neural Transfer Layer for Modern Compute**
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Spec Version](https://img.shields.io/badge/spec-v0.1.0--draft-orange.svg)](https://ntl.nyuchi.com/spec/overview)
+[![Spec Version](https://img.shields.io/badge/spec-v0.1.0--draft-orange.svg)](https://openntl.org/spec/overview)
 
 ---
 
@@ -28,7 +28,7 @@ NTL introduces:
 │         Applications            │
 │      (Mukoko, dApps, AI)        │
 ├─────────────────────────────────┤
-│     Nyuchi Transfer Layer       │  ← This project
+│     Neural Transfer Layer       │  ← This project
 │    (Neural Signal Transport)    │
 ├─────────────────────────────────┤
 │          SiafuDB                │
@@ -60,14 +60,14 @@ ntl listen
 
 ## Documentation
 
-Full documentation is available at [ntl.nyuchi.com](https://ntl.nyuchi.com).
+Full documentation is available at [openntl.org](https://openntl.org).
 
-- [Introduction](https://ntl.nyuchi.com/introduction)
-- [Why NTL](https://ntl.nyuchi.com/why-ntl)
-- [Architecture](https://ntl.nyuchi.com/architecture)
-- [Core Concepts](https://ntl.nyuchi.com/concepts/signals)
-- [Specification](https://ntl.nyuchi.com/spec/overview)
-- [Quickstart Guide](https://ntl.nyuchi.com/guides/quickstart)
+- [Introduction](https://openntl.org/introduction)
+- [Why NTL](https://openntl.org/why-ntl)
+- [Architecture](https://openntl.org/architecture)
+- [Core Concepts](https://openntl.org/concepts/signals)
+- [Specification](https://openntl.org/spec/overview)
+- [Quickstart Guide](https://openntl.org/guides/quickstart)
 
 ## Repository Structure
 
@@ -91,23 +91,25 @@ ntl/
 
 ## Project Status
 
-NTL is in **Phase 0: Foundation** — specification development and documentation. See the [roadmap](https://ntl.nyuchi.com/governance/roadmap) for details.
+NTL is in **Phase 0: Foundation** — specification development and documentation. See the [roadmap](https://openntl.org/governance/roadmap) for details.
 
 ## Contributing
 
-We welcome contributions from anyone, anywhere. See [CONTRIBUTING.md](CONTRIBUTING.md) and our [contribution guide](https://ntl.nyuchi.com/governance/contributing).
+We welcome contributions from anyone, anywhere. See [CONTRIBUTING.md](CONTRIBUTING.md) and our [contribution guide](https://openntl.org/governance/contributing).
 
 NTL is built on the Ubuntu philosophy — *"I am because we are."*
 
-## Built by Nyuchi Africa
+## Built by The Bundu Foundation
 
-NTL is built by [Nyuchi Africa](https://nyuchi.com), a technology company in Zimbabwe building open source platforms and infrastructure for African markets and beyond.
+NTL is stewarded by [The Bundu Foundation](https://www.bundu.org), an open source foundation building infrastructure for African markets and beyond.
 
 | Entity | Role |
 |---|---|
-| [Nyuchi Africa](https://nyuchi.com) | Parent entity, stewardship |
+| [The Bundu Foundation](https://www.bundu.org) | Owner and steward |
 | [Nyuchi Web Services](https://nws.nyuchi.com) | Engineering, reference implementation |
-| [SiafuDB](https://siafu.nyuchi.com) | Companion storage layer |
+| [Nyuchi Africa](https://www.nyuchi.com) | Core maintainer |
+| [Mukoko Africa](https://mukoko.com) | Core maintainer |
+| [SiafuDB](https://siafudb.org) | Companion storage layer |
 | [Mukoko](https://mukoko.com) | Application platform |
 
 ## License

@@ -1,6 +1,6 @@
 # Contributing to NTL
 
-Thank you for your interest in contributing to the Nyuchi Transfer Layer. NTL is built on the Ubuntu philosophy — *"I am because we are."*
+Thank you for your interest in contributing to the Neural Transfer Layer. NTL is built on the Ubuntu philosophy — *"I am because we are."*
 
 ## Getting Started
 
@@ -59,7 +59,7 @@ ntl/
 
 ## Specification Changes
 
-Changes to the NTL protocol specification require an RFC. See `rfcs/0000-template.md` for the template and the [RFC process](https://ntl.nyuchi.com/governance/rfc-process) for details.
+Changes to the NTL protocol specification require an RFC. See `rfcs/0000-template.md` for the template and the [RFC process](https://openntl.org/governance/rfc-process) for details.
 
 ## Code Style
 

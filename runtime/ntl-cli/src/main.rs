@@ -1,10 +1,10 @@
-//! NTL CLI — Command-line interface for the Nyuchi Transfer Layer.
+//! NTL CLI — Command-line interface for the Neural Transfer Layer.
 
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(name = "ntl")]
-#[command(about = "Nyuchi Transfer Layer — The Neural Transfer Layer for Modern Compute")]
+#[command(about = "Neural Transfer Layer — The Neural Transfer Layer for Modern Compute")]
 #[command(version)]
 struct Cli {
     #[command(subcommand)]

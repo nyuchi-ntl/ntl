@@ -1,0 +1,64 @@
+---
+title: "04 — Network Transport & IPv6"
+description: "Why the fabric layer requires IPv6 and why this aligns with Africa's infrastructure trajectory."
+mode: "wide"
+"og:title": "Network Transport & IPv6 — NTL Research"
+"og:description": "Why NTL's fabric layer requires IPv6 and how this aligns with Africa's infrastructure trajectory."
+"twitter:title": "Network Transport & IPv6"
+---
+
+> Why the fabric layer requires IPv6 and why this aligns with Africa's infrastructure trajectory.
+
+**Status:** RESEARCH — Blocker identified, solution documented
+
+---
+
+## The Problem
+
+NTL's signal model requires any node to receive signals from any other node at any time, without pre-established connections. IPv4 NAT breaks this — devices behind NAT are not directly addressable.
+
+### How NAT Breaks Signal Propagation
+
+| Workaround | Problem |
+|------------|---------|
+| Device initiates first | Contradicts activation model |
+| Relay server | Centralised, adds latency, single point of failure |
+| STUN/hole punching | 60-80% success, seconds of latency, coordination server needed |
+
+None are compatible with neural signal propagation at scale.
+
+## The Solution: IPv6
+
+IPv6 gives every device a globally routable address. No NAT, no relay, no hole punching. Any node can signal any other node directly.
+
+## Layered Requirements
+
+| Layer | Scope | IP Requirement |
+|-------|-------|---------------|
+| Channel | Same process | None |
+| Local | Same machine | None |
+| Network | Same LAN | IPv4 or IPv6 |
+| Fabric | Global | **IPv6 required** |
+
+GSPA (API transport) works on IPv4 through traditional client-server model.
+
+## Africa's IPv6 Trajectory
+
+African mobile networks are deploying IPv6 faster than legacy Western networks — no legacy IPv4 to protect, mobile-first infrastructure, AFRINIC address pressure, Android IPv6 support since 2014.
+
+## Fallbacks
+
+1. GSPA on IPv4 (lose GSPN advantages, retain sync)
+2. IPv6 tunnel (adds latency)
+3. Relay node with IPv6 (intermediary)
+4. Dual-stack (most common as deployment progresses)
+
+## Implementation Notes
+
+- Device-level IPv6 detection at startup
+- IPv6 privacy extensions (RFC 4941) to prevent tracking
+- Firewall keepalive via NTL heartbeat signals
+
+---
+
+*April 2026 — The Bundu Foundation*

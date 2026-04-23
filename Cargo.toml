@@ -17,9 +17,9 @@ members = [
 version = "0.1.0"
 edition = "2024"
 license = "Apache-2.0"
-repository = "https://github.com/nyuchitech/ntl"
-homepage = "https://ntl.nyuchi.com"
-authors = ["Nyuchi Africa <engineering@nyuchi.com>"]
+repository = "https://github.com/nyuchi-ntl/ntl"
+homepage = "https://openntl.org"
+authors = ["The Bundu Foundation <dev@openntl.org>"]
 rust-version = "1.85"
 
 [workspace.dependencies]

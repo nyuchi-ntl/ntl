@@ -1,0 +1,172 @@
+---
+title: "02 — Machine Learning at the Transfer Layer"
+description: "PyTorch taught computers to think. NTL teaches networks to learn."
+mode: "wide"
+"og:title": "Machine Learning at the Transfer Layer — NTL Research"
+"og:description": "How NTL applies machine learning principles directly to the network transport layer, enabling infrastructure that learns."
+"twitter:title": "ML at the Transfer Layer"
+---
+
+> PyTorch taught computers to think. NTL teaches networks to learn.
+
+**Status:** RESEARCH — Foundational insight
+
+---
+
+## The Core Argument
+
+PyTorch and TensorFlow gave the world a programming model for neural networks: define nodes, connect with weighted edges, propagate signals, learn from outcomes. This model revolutionised computation.
+
+NTL applies the same model to data transfer. The nodes are infrastructure. The connections are synapses. The signals are data. The learning is real. The hardware acceleration is the same silicon.
+
+This is not an analogy. NTL's routing model is an actual neural network, executable by the same hardware neural engines that run PyTorch models on your phone.
+
+---
+
+## The Twelve Principles
+
+PyTorch implements five neural principles. NTL implements twelve.
+
+### Principles 1-5: What PyTorch Does
+
+| # | Principle | PyTorch | NTL |
+|---|-----------|---------|-----|
+| 1 | Weighted graph | Neurons + weighted edges | Nodes + weighted synapses |
+| 2 | Forward propagation | Input → layers → output | Emit → synapses → activation |
+| 3 | Junction transformation | Layer functions (ReLU, matmul) | Synapse functions (PII strip, anonymise) |
+| 4 | Learning | Backpropagation + gradient descent | Hebbian + gradient + spike-timing |
+| 5 | Improvement over time | Training makes model better | Traffic makes routing smarter |
+
+### Principles 6-12: What NTL Adds
+
+| # | Principle | What It Means for NTL |
+|---|-----------|----------------------|
+| 6 | Inhibition | High-priority signals suppress low-priority. Financial transactions dampen analytics noise. |
+| 7 | Recurrence | Feedback loops keep context alive. Updates circulate rather than fire-and-forget. |
+| 8 | Neuromodulation | Meta-signals change network-wide behaviour. "High load" reduces global sensitivity. |
+| 9 | Rich plasticity | Timing matters for learning. New connections form where useful. Dead connections pruned. |
+| 10 | Hierarchical processing | Raw data, patterns, and recommendations processed at multiple levels simultaneously. |
+| 11 | Sparse activation | Most nodes dormant. Near-zero power when idle. Only active paths consume resources. |
+| 12 | Multi-scale temporality | Millisecond routing, minute adaptation, hour learning, week topology evolution. |
+
+PyTorch simplified to five because it optimised for GPU computation. NTL runs on infrastructure with access to neural hardware and can implement the full repertoire.
+
+---
+
+## The Complete Mapping
+
+| Concept | PyTorch / TensorFlow | NTL |
+|---------|---------------------|-----|
+| Node | Neuron (math function) | Infrastructure node (device, DB, service) |
+| Connection | Weighted edge | Synapse (weighted, transforming, learning) |
+| Signal | Activation tensor | Data signal (mutation, event, context) |
+| Weight | Learned parameter | Synapse weight |
+| Forward pass | Input → layers → output | Emit → synapses → activation |
+| Transformation | Layer function | Synapse function |
+| Learning rule | Backprop + SGD | Hebbian + gradient + spike-timing |
+| Loss function | Error vs desired output | Delivery success vs intent |
+| Batch | Training samples | Signals in time window |
+| Epoch | Pass through training data | Learning cycle across synapses |
+| Inference | Trained model on new input | Mature network routing new signals |
+| Training | Weight adjustment | Traffic adjusts synapse weights |
+| Overfitting | Memorises training data | Over-specialises to current traffic |
+| Regularisation | Dropout, weight decay | Synapse decay, min weight thresholds |
+| Transfer learning | Pre-trained weights for new task | Pre-trained topology for new deployment |
+| Hardware | GPU (CUDA, ROCm) | NPU (Neural Engine, Hexagon, Da Vinci) |
+
+---
+
+## Hardware Neural Engines
+
+NTL's routing model runs on the same hardware that runs PyTorch models:
+
+| Device | NPU | TOPS | NTL Routing Inference |
+|--------|-----|------|----------------------|
+| iPhone (A14+) | Apple Neural Engine | 15.8 | Nanoseconds |
+| Snapdragon 8 Gen 2+ | Qualcomm Hexagon | 12.4 | Nanoseconds |
+| Exynos 2400+ | Samsung NPU | 14.7 | Nanoseconds |
+| Kirin 9000+ | Huawei Da Vinci | 8.0 | Nanoseconds |
+
+NTL's routing model is tiny (hundreds of parameters). These NPUs handle billion-parameter models. Routing inference is essentially free in both time and power.
+
+**Every modern phone has a neural engine sitting idle.** NTL gives it a job: routing your data intelligently, learning from traffic patterns, and doing it faster and cheaper than any CPU-based routing could.
+
+---
+
+## The Graph Sync Protocol as Training Loop
+
+The Graph Sync Protocol (in SiafuDB) provides the training feedback that NTL learns from:
+
+```
+1. SiafuDB produces mutation
+2. Sync protocol emits signal into NTL
+3. NTL routing model (neural network) decides path
+4. Signal propagates through synapses (transforming)
+5. Receiver applies mutation
+6. Sync protocol reports: success / conflict / failure
+7. NTL updates routing model weights
+8. Next signal routes more efficiently
+
+Every sync cycle = one training step
+```
+
+This means the sync protocol is not just moving data. It is training the network. Every mutation that flows through the system makes the routing slightly smarter. The protocol and the learning are inseparable.
+
+---
+
+## Engineering Implications
+
+### 1. ML Analysis Tools Apply
+
+NTL's topology is a neural network. ML analysis tools work on it:
+- Weight distribution visualisation (strong vs weak synapses)
+- Activation maps (which nodes are active)
+- Dead neuron detection (unreachable nodes)
+- Training metrics (delivery success over time)
+
+### 2. Hyperparameters Need Tuning
+
+| ML Hyperparameter | NTL Equivalent |
+|-------------------|---------------|
+| Learning rate | Hebbian rate on synapses |
+| Weight decay | Synapse decay half-life |
+| Batch size | Signal aggregation window |
+| Dropout | Random synapse deactivation |
+| Network depth | Maximum hop count |
+| Activation threshold | Node activation threshold |
+
+Different deployments need different hyperparameters. High-traffic Mukoko deployment ≠ low-traffic IoT network.
+
+### 3. Learned Transformations
+
+Today: synapse transformations configured ("strip PII"). Future: synapse learns what receiver needs and strips what it doesn't. This is attention applied to data transfer.
+
+### 4. Transfer Learning
+
+Pre-trained routing model from Harare deployment fine-tuned for Lusaka. Routing intelligence is portable.
+
+### 5. Distributed Training
+
+Multiple NTL nodes coordinating learning, analogous to PyTorch's DistributedDataParallel. Network-wide routing improves through coordinated weight updates.
+
+---
+
+## What This Changes
+
+NTL is not a messaging protocol with ML features. NTL IS machine learning infrastructure. The routing IS a neural network. The learning IS training. The hardware IS neural silicon.
+
+This breaks conventional thinking because:
+
+- **Protocols don't learn.** HTTP doesn't get better at routing over time. TCP doesn't strengthen paths that carry successful traffic. NTL does.
+
+- **Transfer layers don't use neural hardware.** No existing transfer protocol runs on NPUs. NTL's routing model does, because it's a neural network.
+
+- **Infrastructure and ML are separate fields.** NTL unifies them. The infrastructure IS the model. The traffic IS the training data. The routing IS the inference.
+
+If this is achievable — and the engineering path is clear — it represents a genuine break from how data infrastructure has worked for fifty years.
+
+---
+
+*Machine Learning at the Transfer Layer — April 2026 — The Bundu Foundation*
+
+*"PyTorch taught computers to think. NTL teaches networks to learn."*

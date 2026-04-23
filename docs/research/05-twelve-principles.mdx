@@ -1,0 +1,133 @@
+---
+title: "05 — The Twelve Principles"
+description: "The full neural repertoire that NTL draws from. Beyond PyTorch's five."
+mode: "wide"
+"og:title": "The Twelve Principles — NTL Research"
+"og:description": "The full neural repertoire that NTL draws from, extending beyond PyTorch's five principles to twelve."
+"twitter:title": "The Twelve Principles"
+---
+
+> The full neural repertoire that NTL draws from. Beyond PyTorch's five.
+
+**Status:** RESEARCH — Theoretical framework
+
+---
+
+## Why Twelve, Not Five
+
+PyTorch implements five neural principles because it optimised for GPU computation. Matrix multiplication on CUDA cores. That's what GPUs do fast, so PyTorch models the brain's aspects that reduce to matrix multiplication.
+
+NTL runs on infrastructure — devices, networks, edge nodes — not GPUs. It has access to hardware neural engines designed for broader neural operations. It is not constrained to what maps to matrix multiplication. It can implement the brain's full repertoire.
+
+---
+
+## The Five (PyTorch's subset)
+
+### 1. Weighted Graph
+Nodes connected by weighted edges. The foundation of everything else. In NTL: infrastructure nodes connected by weighted synapses.
+
+### 2. Forward Propagation
+Signals flow through the network from emitter to receivers. In NTL: data signals propagate through synapse topology from source to destinations.
+
+### 3. Junction Transformation
+Data changes shape at each connection. In NTL: synapse functions transform signals — PII stripping, anonymisation, filtering, aggregation.
+
+### 4. Learning
+Weights adjust based on outcomes. In NTL: Hebbian strengthening, gradient descent from delivery feedback, spike-timing-dependent plasticity.
+
+### 5. Improvement Over Time
+The network gets better with experience. In NTL: routing optimises based on real traffic, deployment gets more efficient without reconfiguration.
+
+---
+
+## The Seven (NTL's additions)
+
+### 6. Inhibition
+
+**Biological:** Inhibitory neurons suppress activity. When you focus on one voice in a crowd, inhibitory circuits suppress the others. ~20% of neurons in the cortex are inhibitory.
+
+**NTL:** High-priority signals suppress low-priority signals on shared synapses. A financial transaction signal inhibits analytics event signals from competing for the same bandwidth. This is not just priority queuing — signals actively affect other signals' propagation strength.
+
+**Implementation:** Inhibitory synapses have negative weights. When an inhibitory signal arrives at a node, it reduces the node's accumulated activation rather than increasing it, making it harder for other signals to trigger activation.
+
+### 7. Recurrence
+
+**Biological:** The brain has massive feedback loops. Working memory is a recurrent circuit — neurons keep each other active to hold a thought. 80%+ of cortical connections are recurrent.
+
+**NTL:** Signals can loop back through the network. A context update propagates from device to platform, triggers a recommendation, which propagates back to device, which updates context. Instead of fire-and-forget, context circulates and stays alive.
+
+**Implementation:** Signal hop count limits prevent infinite loops. Each pass through a loop reduces signal weight (damping). Loops stabilise at an equilibrium where the circulating signal is weak enough not to trigger further propagation but strong enough to keep context warm.
+
+### 8. Neuromodulation
+
+**Biological:** Dopamine, serotonin, norepinephrine change how entire brain regions respond. Dopamine doesn't carry specific information — it changes the gain on all signals in a region. High dopamine = more responsive, more exploratory. Low dopamine = less responsive, more habitual.
+
+**NTL:** Meta-signals change network-wide behaviour. A "high-load" meta-signal reduces synapse sensitivity across a region, preventing cascade failure during traffic spikes (equivalent to reducing gain). A "critical-event" meta-signal increases sensitivity in relevant regions, ensuring important signals propagate quickly (equivalent to increasing gain).
+
+**Implementation:** Neuromodulatory signals are a special type that, instead of carrying data, modify the activation thresholds and synapse weights of nodes in their propagation path. They don't trigger activation handlers — they change the parameters that determine how future signals are handled.
+
+### 9. Rich Plasticity
+
+**Biological:** Beyond Hebbian learning, the brain uses spike-timing-dependent plasticity (STDP) — the precise timing between pre-synaptic and post-synaptic firing determines whether a synapse strengthens or weakens. The brain also exhibits structural plasticity — new synapses form, existing ones are eliminated, based on activity.
+
+**NTL:** Timing matters for learning. A synapse that carries signals arriving just before the receiver processes them strengthens faster (the timing was useful). A synapse that carries signals arriving too late weakens (the timing was wasteful). New synapses form when two nodes frequently exchange signals through long indirect paths — the network shortcuts itself. Dormant synapses (no traffic for a configured period) are pruned.
+
+**Implementation:** STDP requires tracking the timing relationship between signal emission and receiver activation. The learning rate is modulated by how close the arrival time was to the receiver's processing window. Structural plasticity is implemented by a periodic topology review that identifies high-traffic indirect paths and proposes direct connections.
+
+### 10. Hierarchical Processing
+
+**Biological:** The visual cortex has layers: V1 detects edges, V2 detects contours, V4 detects shapes, IT detects objects. Each level processes a more abstract representation. The levels operate simultaneously and exchange information laterally.
+
+**NTL:** Signals are processed at multiple abstraction levels simultaneously:
+- **Data level:** raw mutation (vertex created, edge updated)
+- **Pattern level:** traffic pattern (burst of engagements, sync backlog building)
+- **Intelligence level:** recommendation or adaptation decision (reroute traffic, adjust synapse weights)
+
+These levels aren't sequential stages — they're parallel processing layers with lateral connections. A burst of engagement signals at the data level immediately triggers pattern detection, which immediately influences routing decisions at the intelligence level.
+
+**Implementation:** The signal network has designated processing tiers. Nodes at each tier subscribe to different signal types and produce different output types. Lateral connections between tiers carry cross-level information.
+
+### 11. Sparse Activation
+
+**Biological:** At any moment, only ~1-5% of neurons are active. The rest are at resting potential, consuming minimal energy. The brain's 20-watt power budget for 86 billion neurons is possible because of sparse activation.
+
+**NTL:** Most nodes and synapses are dormant most of the time. Only the paths relevant to current traffic are active. A device with no pending signals has a dormant NTL node consuming near-zero resources — no polling, no keepalive traffic, no background computation. When a signal arrives, only the relevant synapses activate, propagate, and return to dormant.
+
+**Implementation:** Nodes have a sleep state with no active polling. Signal arrival is event-driven (interrupt-based on channel/socket), not poll-based. Synapses are not evaluated unless a signal arrives at their source node. The routing model is not executed unless there's a signal to route.
+
+### 12. Multi-Scale Temporal Dynamics
+
+**Biological:** The brain operates at multiple timescales simultaneously: millisecond signal propagation, hundred-millisecond sensory integration, second-scale attention, minute-scale working memory, hour-scale arousal cycles, day-scale circadian rhythms, week/year-scale long-term memory consolidation.
+
+**NTL:** The network operates at multiple timescales:
+
+| Timescale | Process |
+|-----------|---------|
+| Nanoseconds | Routing model inference (NPU) |
+| Microseconds | Signal propagation (in-process) |
+| Milliseconds | Signal propagation (network) |
+| Seconds | Adaptive flow control |
+| Minutes | Training step (weight updates) |
+| Hours | Pattern learning |
+| Days | Topology evolution (new synapses, pruning) |
+| Weeks | Long-term optimisation, deployment-wide learning |
+
+Each timescale has its own mechanisms and its own feedback loops. Fast timescales handle individual signals. Slow timescales handle structural adaptation. The system is stable because fast processes operate within the constraints set by slow processes, while slow processes adapt based on patterns observed in fast processes.
+
+---
+
+## Implementation Priority
+
+Not all twelve principles are needed in v1. The implementation order based on impact and feasibility:
+
+| Phase | Principles | Why First |
+|-------|-----------|-----------|
+| v1 | 1-5 (weighted graph, propagation, transformation, learning, improvement) | Foundation. Must work. |
+| v2 | 11 (sparse activation), 12 (multi-scale temporality) | Battery and performance. Critical for mobile. |
+| v3 | 6 (inhibition), 7 (recurrence) | Traffic management and context circulation. |
+| v4 | 9 (rich plasticity), 10 (hierarchical processing) | Advanced routing intelligence. |
+| v5 | 8 (neuromodulation) | Network-wide adaptive behaviour. |
+
+---
+
+*The Twelve Principles — April 2026 — The Bundu Foundation*

@@ -1,0 +1,100 @@
+---
+title: "06 — First Steps"
+description: "NTL-specific actions from now to research preview."
+mode: "wide"
+"og:title": "First Steps — NTL Research"
+"og:description": "Concrete NTL-specific actions from initial development through to research preview release."
+"twitter:title": "NTL First Steps"
+---
+
+> NTL-specific actions from now to research preview.
+
+**Status:** ACTIVE
+
+---
+
+## Repository (`nyuchi-ntl/ntl`)
+
+### Immediate Actions
+
+1. **Create `ntl-signal` crate** in `crates/ntl-signal/`
+   - Scaffold Node, Signal, Synapse, SignalNetwork types
+   - Implement channel transport layer (in-process, Rust mpsc)
+   - Basic tests: create nodes, connect, emit, verify activation
+   - This is Phase 1 of the signal primitive roadmap
+
+2. **Add research docs** to `docs/research/`
+   - Move these .mdx files into the repo
+   - Set up Mintlify at `openntl.org` with research section visible
+
+3. **Update README** to reflect the ML-at-transfer-layer positioning
+   - Lead with "infrastructure-level machine learning"
+   - The twelve principles summary
+   - Hardware neural engine story
+
+### Near-Term Engineering
+
+| Week | Deliverable |
+|------|-------------|
+| 1-2 | `ntl-signal` crate with weight-based routing (Phase 1: Fallback backend) |
+| 3-4 | Basic tests, benchmarks at 100-1000 node scale |
+| 5-6 | ONNX routing model integration (Phase 2: OnnxCpu backend) |
+| 7-8 | Hardware NPU research — Core ML and NNAPI exploration |
+| 9-10 | Training pipeline: sync protocol feedback → weight updates |
+| 11-12 | Research preview alongside SiafuDB launch |
+
+### Research Questions to Answer
+
+1. **ONNX Runtime Rust bindings:** Does the `ort` crate support all target platforms? iOS, Android, WASM?
+2. **NPU access:** What's the path from ONNX model to Core ML (iOS) and NNAPI (Android)?
+3. **Model size:** What's the minimum routing model that produces meaningful improvements over weight-based routing?
+4. **Training frequency:** How often can we run gradient updates on-device without impacting battery?
+5. **Privacy:** Do routing features (device state, activity patterns) create privacy risks if the model is exported?
+
+### Outreach
+
+| When | Who | What |
+|------|-----|------|
+| After `ntl-signal` works | Rust community (r/rust, Discord) | The signal primitive — new concurrency paradigm |
+| After ONNX integration | ML community | Neural routing on NPU hardware |
+| After IPv6 research | Networking community | Signal propagation without NAT |
+
+Lead with the signal primitive for Rust community (they love new concurrency primitives). Lead with ML principles for ML community. Lead with IPv6 architecture for networking community. Each community enters through their interest and discovers the larger vision.
+
+---
+
+## Crate Structure
+
+```
+ntl/
+├── crates/
+│   ├── ntl-signal/                 # ← BUILD THIS FIRST
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── node.rs             # Node struct, accumulation, activation
+│   │       ├── signal.rs           # Signal trait, DataSignal
+│   │       ├── synapse.rs          # Synapse, transformation, learning rules
+│   │       ├── network.rs          # SignalNetwork, topology management
+│   │       ├── routing/
+│   │       │   ├── mod.rs
+│   │       │   ├── fallback.rs     # Weight-based (Phase 1)
+│   │       │   ├── onnx.rs         # ONNX model (Phase 2)
+│   │       │   └── npu.rs          # Hardware NPU (Phase 3)
+│   │       └── transport/
+│   │           ├── mod.rs
+│   │           ├── channel.rs      # In-process (Rust mpsc)
+│   │           ├── local.rs        # Same machine (Unix socket)
+│   │           ├── network.rs      # Same LAN (TCP/QUIC)
+│   │           └── fabric.rs       # Global (IPv6)
+│   ├── ntl-core/                   # Existing
+│   ├── ntl-cli/                    # Existing
+│   ├── ntl-node/                   # Existing
+│   └── ntl-edge/                   # Existing
+├── docs/research/                  # These documents
+└── ...
+```
+
+---
+
+*April 2026 — The Bundu Foundation*

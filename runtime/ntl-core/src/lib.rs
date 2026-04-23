@@ -1,4 +1,4 @@
-//! # Nyuchi Transfer Layer (NTL)
+//! # Neural Transfer Layer (NTL)
 //!
 //! **The Neural Transfer Layer for Modern Compute**
 //!

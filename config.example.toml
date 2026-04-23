@@ -1,11 +1,11 @@
 # NTL Node Configuration
-# https://ntl.nyuchi.com/guides/quickstart
+# https://ntl.openntl.org/guides/quickstart
 
 [network]
 bootstrap_nodes = [
-    "ntl://bootstrap-1.nyuchi.com:4433",
-    "ntl://bootstrap-2.nyuchi.com:4433",
-    "ntl://bootstrap-af.nyuchi.com:4433",
+    "ntl://bootstrap-1.openntl.org:4433",
+    "ntl://bootstrap-2.openntl.org:4433",
+    "ntl://bootstrap-af.openntl.org:4433",
 ]
 bind_address = "0.0.0.0"
 port = 4433

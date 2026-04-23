@@ -1,6 +1,6 @@
 [package]
 name = "ntl-core"
-description = "Core library for the Nyuchi Transfer Layer — neural signal-based data transport"
+description = "Core library for the Neural Transfer Layer — neural signal-based data transport"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

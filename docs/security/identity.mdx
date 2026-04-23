@@ -1,10 +1,10 @@
 ---
-title: Identity
-description: How NTL nodes establish and verify identity
+title: "Identity"
+description: "How NTL nodes establish and verify identity"
+"og:title": "Identity — NTL Security"
+"og:description": "How NTL nodes establish identity, verify peers, and build trust in the network."
+"twitter:title": "NTL Identity"
 ---
-
-# Identity
-
 Every NTL node has an identity. Identity determines who can emit signals, who can form synapses, and how trust is established in the network.
 
 ## Identity Model
@@ -42,7 +42,7 @@ Nodes can anchor their NTL identity to a DID for cross-system verification:
 
 ```rust
 struct DidAnchor {
-    did: String,                   // e.g., "did:web:nyuchi.com:nodes:abc123"
+    did: String,                   // e.g., "did:web:openntl.org:nodes:abc123"
     verification_method: String,
     proof: Vec<u8>,
 }

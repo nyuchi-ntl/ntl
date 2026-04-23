@@ -37,8 +37,8 @@ impl Default for NodeConfig {
         Self {
             network: NetworkConfig {
                 bootstrap_nodes: vec![
-                    "ntl://bootstrap-1.nyuchi.com:4433".to_string(),
-                    "ntl://bootstrap-2.nyuchi.com:4433".to_string(),
+                    "ntl://bootstrap-1.openntl.org:4433".to_string(),
+                    "ntl://bootstrap-2.openntl.org:4433".to_string(),
                 ],
                 bind_address: "0.0.0.0".to_string(),
                 port: 4433,
