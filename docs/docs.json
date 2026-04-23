@@ -155,5 +155,15 @@
     "dark": "/images/ntl-icon-dark.png",
     "href": "https://ntl.nyuchi.com"
   },
-  "favicon": "/images/bundu-ecosystem-icons-nyuchi-icon-dark.png"
+  "favicon": "/images/bundu-ecosystem-icons-nyuchi-icon-dark.png",
+  "background": {
+    "decoration": "grid",
+    "color": {
+      "light": "#F3F2EE",
+      "dark": "#1B1A17"
+    }
+  },
+  "appearance": {
+    "default": "system"
+  }
 }
