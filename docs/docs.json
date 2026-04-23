@@ -3,9 +3,9 @@
   "name": "Nyuchi Transfer Layer",
   "theme": "maple",
   "colors": {
-    "primary": "#E85D26",
-    "light": "#F2A93B",
-    "dark": "#E85D26"
+    "primary": "#8B4513",
+    "light": "#8B4513",
+    "dark": "#D4A574"
   },
   "navbar": {
     "links": [
