@@ -134,5 +134,6 @@
   "fonts": {
     "family": "noto",
     "weight": 500
-  }
+  },
+  "description": "NTL is an open source data transfer layer that replaces the request-response paradigm of traditional APIs with neural signal propagation. Built for the age of AI, Web3, and quantum computing."
 }
