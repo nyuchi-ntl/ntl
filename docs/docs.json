@@ -147,5 +147,12 @@
     "ga4": {
       "measurementId": "G-E4XLZ17VZS"
     }
+  },
+  "icons": {
+    "library": "lucide"
+  },
+  "styling": {
+    "latex": true,
+    "eyebrows": "section"
   }
 }
