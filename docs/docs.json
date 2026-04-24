@@ -188,10 +188,12 @@
     "og:type": "website",
     "og:locale": "en_US",
     "twitter:site": "@nyuchiafrica",
-    "twitter:card": "summary_large_image"
+    "twitter:card": "summary_large_image",
+    "timestamp": true
   },
   "seo": {
-    "indexHiddenPages": false
+    "indexHiddenPages": false,
+    "indexing": "all"
   },
   "banner": {
     "content": "Maintained by The Bundu Foundation"
@@ -203,5 +205,8 @@
     "playground": {
       "display": "interactive"
     }
+  },
+  "interaction": {
+    "drilldown": true
   }
 }
