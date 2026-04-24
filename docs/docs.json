@@ -192,5 +192,8 @@
   },
   "seo": {
     "indexHiddenPages": false
+  },
+  "banner": {
+    "content": "Maintained by The Bundu Foundation"
   }
 }
