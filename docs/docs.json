@@ -198,5 +198,10 @@
   },
   "thumbnails": {
     "appearance": "light"
+  },
+  "api": {
+    "playground": {
+      "display": "interactive"
+    }
   }
 }
