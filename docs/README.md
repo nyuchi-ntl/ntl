@@ -28,13 +28,27 @@ the divergence. Please keep it a pointer.
 ## Working on the docs
 
 ```bash
-npm i -g mint
 cd docs
-mint dev
+npm run install:mint    # npm install -g mint@4.2.876
+npm run dev             # live preview on :11200
 ```
 
-Broken internal links fail the `Docs` job in CI, so `mint dev` catching them
-locally is faster than a round trip.
+Two checks gate this directory in CI, in the `Docs site` job — not `Docs`, which
+is rustdoc over the Rust workspace and never reads these files:
+
+```bash
+npm run validate        # the site builds; strict, fails on warnings too
+npm run broken-links    # no dead internal links
+```
+
+Run both before pushing; catching a break locally is faster than a round trip.
+They are the same commands and the same pinned CLI version that CI runs, so a
+pass here means a pass there — keep the pin in `package.json` and in
+`.github/workflows/ci.yml` in step when you bump it.
+
+The Mintlify GitHub App posts its own `Mintlify Deployment` check, but that one
+reports `skipped` on pull requests: it runs on the deploy branch only. It is not
+a pre-merge guarantee, which is what the two commands above are for.
 
 Every normative claim in `spec/` should be true of the reference
 implementation, or say plainly where it is not — see the *Status of This

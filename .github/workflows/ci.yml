@@ -113,6 +113,37 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
 
+  # docs/ is 48 MDX files and a docs.json that nothing in CI used to read. The
+  # Mintlify GitHub App's own check reports "skipped" on pull requests — it only
+  # runs on the deploy branch — so a malformed docs.json, an unclosed component
+  # tag or a dead internal link could reach openntl.org with CI fully green.
+  #
+  # The CLI version is pinned on purpose. Mintlify ships often, and an unpinned
+  # global install would let a release of theirs turn this repo red on a commit
+  # that touched nothing: the failure would name our pull request while the cause
+  # was upstream. Bump it deliberately, in its own commit.
+  #
+  # Not gated here: `mint a11y`. It cross-checks every accent colour against both
+  # backgrounds, including pairings the rendered site never shows, so it cannot
+  # reach exit 0 with a two-tone palette. See openNTL/ntl#27.
+  docs-site:
+    name: Docs site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the Mintlify CLI
+        run: npm install -g mint@4.2.876
+      # Two steps rather than one, so a red run names which guarantee broke.
+      - name: The docs site builds
+        working-directory: docs
+        run: mint validate
+      - name: No broken internal links
+        working-directory: docs
+        run: mint broken-links
+
   # The Quick Start in the README is a promise. This runs it.
   quickstart:
     name: Quick Start

@@ -4,10 +4,10 @@
   "version": "0.0.1",
   "description": "Mintlify documentation site for the Neural Transfer Layer (NTL).",
   "scripts": {
-    "install:mintlify": "npm install -g mintlify",
-    "dev": "mintlify dev --port 11200",
-    "build": "mintlify build",
-    "broken-links": "mintlify broken-links"
+    "install:mint": "npm install -g mint@4.2.876",
+    "dev": "mint dev --port 11200",
+    "validate": "mint validate",
+    "broken-links": "mint broken-links"
   },
   "engines": {
     "node": ">=18"
