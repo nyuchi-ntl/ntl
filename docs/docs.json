@@ -4,8 +4,8 @@
   "theme": "aspen",
   "colors": {
     "primary": "#8B4513",
-    "light": "#8B4513",
-    "dark": "#D4A574"
+    "light": "#D4A574",
+    "dark": "#8B4513"
   },
   "navbar": {
     "links": [
